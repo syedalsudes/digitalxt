@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Clock, Video, Globe, CheckCircle2 } from "lucide-react";
 import { Cinzel } from "next/font/google";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -22,6 +25,81 @@ export default function BookingSection() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [activeSlotForSelection, setActiveSlotForSelection] = useState<string | null>(null);
   const [isBooked, setIsBooked] = useState(false);
+
+  // GSAP References
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const leftPanelRef = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Lenis Engine Setup
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // 2. GSAP Entrance Sequence
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      // Hide initial elements
+      gsap.set([headingRef.current, leftPanelRef.current, rightPanelRef.current], {
+        opacity: 0,
+        y: 40,
+      });
+
+      // Animate In
+      tl.to(headingRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power3.out",
+      })
+        .to(
+          leftPanelRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.3"
+        )
+        .to(
+          rightPanelRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.6"
+        );
+    }, sectionRef);
+
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
+  }, []);
 
   // Generate 1-HOUR interval time slots from 7:00 AM to 8:00 PM
   const timeSlots: string[] = [];
@@ -70,13 +148,16 @@ export default function BookingSection() {
   };
 
   return (
-    <section id="booking" className="w-full py-28 bg-[#08050c] text-white flex flex-col items-center border-t border-white/5 relative overflow-hidden">
-      
+    <section
+      id="booking"
+      ref={sectionRef}
+      className="w-full py-28 bg-[#08050c] text-white flex flex-col items-center border-t border-white/5 relative overflow-hidden"
+    >
       {/* Background Subtle Radial Lighting */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
 
       {/* 1-Line Minimal Heading */}
-      <div className="relative z-10 text-center mb-16 px-4 flex flex-col items-center">
+      <div ref={headingRef} className="relative z-10 text-center mb-16 px-4 flex flex-col items-center">
         <h2 className={`text-3xl sm:text-5xl font-bold uppercase tracking-widest text-white ${cinzel.className}`}>
           Book A Meeting
         </h2>
@@ -88,7 +169,7 @@ export default function BookingSection() {
         <div className="bg-[#0e0918]/90 border border-white/10 rounded-3xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[520px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
           
           {/* Left Info Panel */}
-          <div className="lg:col-span-4 p-8 sm:p-10 border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col justify-between bg-[#0a0612]">
+          <div ref={leftPanelRef} className="lg:col-span-4 p-8 sm:p-10 border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col justify-between bg-[#0a0612]">
             <div>
               {/* Agency Logo Integrated */}
               <div className="flex items-center gap-3 mb-8">
@@ -100,7 +181,7 @@ export default function BookingSection() {
                   className="w-9 h-9 object-contain"
                 />
                 <span className={`text-lg font-bold uppercase tracking-wider text-white ${cinzel.className}`}>
-                  Retnavia
+                  DIGITALIX STUDIOS
                 </span>
               </div>
 
@@ -136,12 +217,12 @@ export default function BookingSection() {
             </div>
 
             <div className="text-[11px] text-gray-500 mt-10 font-medium">
-              © 2026 Retnavia Studios
+              © 2026 DigitalxStudio.
             </div>
           </div>
 
           {/* Right Calendar & Time Panel */}
-          <div className="lg:col-span-8 p-6 sm:p-10 bg-[#0e0918] flex flex-col justify-between">
+          <div ref={rightPanelRef} className="lg:col-span-8 p-6 sm:p-10 bg-[#0e0918] flex flex-col justify-between">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               
               {/* Calendar Grid */}
@@ -215,14 +296,18 @@ export default function BookingSection() {
                 </div>
               </div>
 
-              {/* Time Slots Area (No visible scrollbars) */}
+              {/* Time Slots Area (Lenis Prevent Added & Scrollbar Hidden) */}
               {selectedDate && (
                 <div className="md:col-span-5 md:border-l border-white/10 md:pl-6 pt-6 md:pt-0">
                   <div className="text-xs text-gray-400 mb-4 font-semibold uppercase tracking-wider">
                     {formatDateHeader(selectedDate)}
                   </div>
 
-                  <div className="max-h-[320px] overflow-y-auto space-y-2.5 pr-1 no-scrollbar">
+                  {/* NOTE: data-lenis-prevent attribute added here */}
+                  <div 
+                    data-lenis-prevent
+                    className="max-h-[320px] overflow-y-auto space-y-2.5 pr-1 no-scrollbar touch-pan-y"
+                  >
                     {timeSlots.map((slot, index) => {
                       const isSelectedSlot = activeSlotForSelection === slot;
 
@@ -274,14 +359,16 @@ export default function BookingSection() {
         </div>
       </div>
 
-      {/* Hide scrollbar CSS */}
+      {/* CSS For Hiding Scrollbar while keeping functionality intact */}
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar {
-          display: none;
+          display: none !important;
+          width: 0px !important;
+          background: transparent !important;
         }
         .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+          -ms-overflow-style: none !important;
+          scrollbar-width: none !important;
         }
       `}</style>
 

@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState } from "react";
-import { ChevronDown, MessageSquare } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronDown } from "lucide-react";
 import { Cinzel } from "next/font/google";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -51,32 +54,135 @@ const faqData: FAQItem[] = [
 export default function FAQSection() {
   const [openId, setOpenId] = useState<number | null>(1);
 
+  // GSAP References
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const faqListRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Lenis Smooth Scroll Engine
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // 2. GSAP Scroll Animations Context
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      const faqItems = faqListRef.current ? faqListRef.current.children : [];
+
+      // Initial state reset
+      gsap.set([subtitleRef.current, titleRef.current, bannerRef.current], {
+        opacity: 0,
+        y: 40,
+      });
+
+      gsap.set(faqItems, {
+        opacity: 0,
+        y: 35,
+      });
+
+      // Sequential Entrance Animation
+      tl.to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: "power3.out",
+      })
+        .to(
+          titleRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power3.out",
+          },
+          "-=0.3"
+        )
+        // Staggered sequence: har ek FAQ box step-by-step upar aayega
+        .to(
+          faqItems,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.6,
+            stagger: 0.12, // Gap between each item
+            ease: "power3.out",
+          },
+          "-=0.4"
+        )
+        .to(
+          bannerRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power3.out",
+          },
+          "-=0.3"
+        );
+    }, sectionRef);
+
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
+  }, []);
+
   const toggleFAQ = (id: number) => {
     setOpenId(openId === id ? null : id);
   };
 
   return (
-    <section className="relative w-full py-28 bg-[#08050c] text-white overflow-hidden border-t border-purple-950/40">
-      
+    <section
+      ref={sectionRef}
+      className="relative w-full py-28 bg-[#08050c] text-white overflow-hidden border-t border-purple-950/40"
+    >
       {/* Background Ambient Glows */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-purple-700/10 blur-[180px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8">
-      {/* Background Ambient Purple Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-purple-600/20 blur-[170px] rounded-full pointer-events-none" />
+        {/* Background Ambient Purple Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-purple-600/20 blur-[170px] rounded-full pointer-events-none" />
 
-      {/* Heading */}
-      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-16 ${cinzel.className}`}>
-        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
-          Support & Queries
-        </p>
-        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
-          Frequently Asked Questions
-        </h2>
-      </div>
+        {/* Heading */}
+        <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-16 ${cinzel.className}`}>
+          <p
+            ref={subtitleRef}
+            className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2"
+          >
+            Support & Queries
+          </p>
+          <h2
+            ref={titleRef}
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
+          >
+            Frequently Asked Questions
+          </h2>
+        </div>
 
         {/* FAQ Accordion List */}
-        <div className="flex flex-col gap-4">
+        <div ref={faqListRef} className="flex flex-col gap-4">
           {faqData.map((faq, index) => {
             const isOpen = openId === faq.id;
             const formattedIndex = index < 9 ? `0${index + 1}` : `${index + 1}`;
@@ -136,7 +242,10 @@ export default function FAQSection() {
         </div>
 
         {/* Bottom Help Banner */}
-        <div className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-purple-950/20 via-[#120a1f] to-purple-950/20 border border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+        <div
+          ref={bannerRef}
+          className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-purple-950/20 via-[#120a1f] to-purple-950/20 border border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left"
+        >
           <div>
             <h4 className={`text-lg font-bold text-white mb-1 ${cinzel.className}`}>Still have questions?</h4>
             <p className="text-gray-400 text-sm">Can't find the answer you're looking for? Feel free to reach out to our team.</p>

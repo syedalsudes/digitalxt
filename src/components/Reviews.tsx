@@ -3,6 +3,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Cinzel } from "next/font/google";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -76,6 +79,83 @@ export default function VideoTestimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
+  // GSAP References
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // 1. Setup Lenis and ScrollTrigger Entry Animation
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Lenis Setup
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // GSAP Context for Scroll Entry
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      // Initial state hide
+      gsap.set([subtitleRef.current, titleRef.current, carouselRef.current], {
+        opacity: 0,
+        y: 40,
+      });
+
+      // Sequential Entrance Animation
+      tl.to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power3.out",
+      })
+        .to(
+          titleRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.4"
+        )
+        .to(
+          carouselRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power3.out",
+          },
+          "-=0.5"
+        );
+    }, sectionRef);
+
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
+  }, []);
+
+  // 2. Auto Rotation Timer
   useEffect(() => {
     if (isHovered) return;
     const interval = setInterval(() => {
@@ -94,23 +174,34 @@ export default function VideoTestimonials() {
   };
 
   return (
-    <section className="relative w-full py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden">
-      
+    <section
+      ref={sectionRef}
+      className="relative w-full py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden"
+    >
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-purple-600/20 blur-[180px] rounded-full pointer-events-none" />
 
       {/* Heading */}
-      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-16 px-4 ${cinzel.className}`}>
-        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
+      <div
+        className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-16 px-4 ${cinzel.className}`}
+      >
+        <p
+          ref={subtitleRef}
+          className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2"
+        >
           Real Stories, Real Results
         </p>
-        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+        <h2
+          ref={titleRef}
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
+        >
           Client Reviews
         </h2>
       </div>
 
       {/* Carousel Container */}
-      <div 
+      <div
+        ref={carouselRef}
         className="relative w-full max-w-6xl mx-auto px-4 flex flex-col items-center justify-center min-h-[460px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -143,35 +234,30 @@ export default function VideoTestimonials() {
             let zIndex = 10;
 
             if (offset === 0) {
-              // Active Center Video
               xPos = 0;
               scale = 1.05;
               opacity = 1;
               zIndex = 30;
               rotateY = 0;
             } else if (offset === 1) {
-              // Right Video - 100% VISIBLE & Crisp
               xPos = 210;
               scale = 0.92;
               opacity = 1;
               rotateY = -12;
               zIndex = 20;
             } else if (offset === 2) {
-              // Far Right Video
               xPos = 390;
               scale = 0.78;
               opacity = 0.5;
               rotateY = -25;
               zIndex = 10;
             } else if (offset === total - 1) {
-              // Left Video - 100% VISIBLE & Crisp
               xPos = -210;
               scale = 0.92;
               opacity = 1;
               rotateY = 12;
               zIndex = 20;
             } else if (offset === total - 2) {
-              // Far Left Video
               xPos = -390;
               scale = 0.78;
               opacity = 0.5;
@@ -201,7 +287,6 @@ export default function VideoTestimonials() {
           })}
         </div>
       </div>
-
     </section>
   );
 }

@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Check, Sparkles, Zap } from "lucide-react";
 import { Cinzel } from "next/font/google";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -193,31 +196,122 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
 }
 
 export default function PricingSection() {
+  // GSAP References
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const cardsGridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 1. Lenis Smooth Scroll Engine
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // 2. GSAP Scroll Animations Context
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 75%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      const cards = cardsGridRef.current ? cardsGridRef.current.children : [];
+
+      // Initial state reset
+      gsap.set([subtitleRef.current, titleRef.current], {
+        opacity: 0,
+        y: 40,
+      });
+
+      gsap.set(cards, {
+        opacity: 0,
+        y: 60,
+      });
+
+      // Sequential Entrance Animation
+      tl.to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: "power3.out",
+      })
+        .to(
+          titleRef.current,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: "power3.out",
+          },
+          "-=0.3"
+        )
+        // Staggered Cards Reveal Animation
+        .to(
+          cards,
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power3.out",
+          },
+          "-=0.4"
+        );
+    }, sectionRef);
+
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
+  }, []);
+
   return (
-    <section className="relative w-full py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden">
-      
+    <section
+      ref={sectionRef}
+      className="relative w-full py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden"
+    >
       {/* Background Ambient Purple Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-purple-600/20 blur-[180px] rounded-full pointer-events-none" />
 
       {/* Heading Zone */}
       <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-20 px-4 ${cinzel.className}`}>
-        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
+        <p
+          ref={subtitleRef}
+          className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2"
+        >
           Flexible Pricing For Every Creator
         </p>
-        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+        <h2
+          ref={titleRef}
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
+        >
           Choose Your Package
         </h2>
       </div>
 
       {/* Pricing Cards Grid */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        <div ref={cardsGridRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {pricingPlans.map((plan) => (
             <PricingCard key={plan.id} plan={plan} />
           ))}
         </div>
       </div>
-
     </section>
   );
 }

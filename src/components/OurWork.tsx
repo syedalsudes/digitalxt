@@ -1,10 +1,13 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -12,17 +15,97 @@ const cinzel = Cinzel({
 });
 
 export default function OurWorkSection() {
-  // Single Video Work Data
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLDivElement>(null);
+
   const work = {
     title: "OUR WORK",
     subtitle: "Featured Showreel & Cinematic Edits",
-    thumbnail: "/thumb.png", // Apni thumbnail image ka path yahan rakhein
+    thumbnail: "/thumb.png",
     link: "/work",
   };
 
+  useEffect(() => {
+    // 1. GSAP Plugin Register karein
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 2. Lenis Setup
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    // 3. Sync Lenis with GSAP ScrollTrigger (Ahem Step)
+    lenis.on('scroll', ScrollTrigger.update);
+
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+
+    gsap.ticker.lagSmoothing(0);
+
+    // 4. GSAP Scroll Animations Context
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%", // Jab section viewport ke 80% per aaye tab shuru ho
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      // Elements ka initial hidden state set karein (GSAP se handle karna cleaner hota hai)
+      gsap.set([subtitleRef.current, titleRef.current, screenRef.current, buttonRef.current], {
+        opacity: 0,
+        y: 50,
+      });
+
+      // Sequential Reveal Animations (One after another)
+      tl.to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power3.out",
+      })
+      .to(titleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: "power3.out",
+      }, "-=0.4") // Pehle wale se thoda jaldi start hoga
+      .to(screenRef.current, {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 1,
+        ease: "power3.out",
+      }, "-=0.5")
+      .to(buttonRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power3.out",
+      }, "-=0.6");
+
+    }, sectionRef);
+
+    // Cleanup logic (Next.js routing / unmount ke liye zaruri hai)
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
+  }, []);
+
   return (
-    <section className="relative w-full min-h-screen bg-[#08050c] text-white flex flex-col items-center justify-center gap-6 md:gap-8 px-4 py-6 overflow-hidden">
-      {/* SVG ClipPath Definition for Curved Cinema Screen */}
+    <section 
+      ref={sectionRef} 
+      className="relative w-full min-h-screen bg-[#08050c] text-white flex flex-col items-center justify-center gap-6 md:gap-8 px-4 py-6 overflow-hidden"
+    >
+      {/* SVG ClipPath Definition */}
       <svg className="absolute w-0 h-0 overflow-hidden" aria-hidden="true">
         <defs>
           <clipPath id="curvedScreenClip" clipPathUnits="objectBoundingBox">
@@ -36,16 +119,16 @@ export default function OurWorkSection() {
 
       {/* Heading */}
       <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 ${cinzel.className}`}>
-        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
+        <p ref={subtitleRef} className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
           {work.subtitle}
         </p>
-        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+        <h2 ref={titleRef} className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
           {work.title}
         </h2>
       </div>
 
-      {/* CURVED CINEMA SCREEN CONTAINER - 80% Width */}
-      <div className="relative z-10 w-[85vw] max-w-[1250px] aspect-[16/9] max-h-[90vh] flex items-center justify-center shrink-0 group my-1">
+      {/* CURVED CINEMA SCREEN CONTAINER */}
+      <div ref={screenRef} className="relative z-10 w-[85vw] max-w-[1250px] aspect-[16/9] max-h-[90vh] flex items-center justify-center shrink-0 group my-1">
         
         {/* Outer Glow behind screen */}
         <div className="absolute inset-0 bg-purple-600/30 blur-2xl rounded-3xl opacity-75 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -92,7 +175,7 @@ export default function OurWorkSection() {
       </div>
 
       {/* Button */}
-      <div className="z-10 shrink-0 relative group/btn">
+      <div ref={buttonRef} className="z-10 shrink-0 relative group/btn">
         <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-50 blur-lg group-hover/btn:opacity-90 transition-opacity duration-300" />
         <Link
           href={work.link}
