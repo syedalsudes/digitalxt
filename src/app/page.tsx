@@ -5,6 +5,7 @@ import VideoTestimonials from "@/components/Reviews";
 import FAQSection from "@/components/Faq";
 import PricingSection from "@/components/Pricing";
 import BookingSection from "@/components/Booking";
+import OurWorkSection from "@/components/Display";
 
 export default function Home() {
 
@@ -12,6 +13,7 @@ export default function Home() {
     <div>
       <HeroSection />
       <FullScreenServices />
+      <OurWorkSection />
       <VideoTestimonials />
       <FAQSection />
       <PricingSection />

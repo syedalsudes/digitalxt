@@ -1,52 +1,50 @@
-import Image from "next/image";
+import { Cinzel } from "next/font/google";
+
+// Cinzel font optimization
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["700"],
+});
 
 export default function Home() {
-  // Video Editing Agency Ke Liye Words:
-  const topText = "WE EDIT";
-  const bottomText = "VISION";
-
   return (
     <main className="relative w-full h-screen overflow-hidden flex items-center justify-start px-6 md:px-16">
-      {/* Background Image */}
-      <Image
-        src="/hero.png"
-        alt="Hero Background"
-        fill
-        priority
-        className="object-cover object-center"
-      />
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      >
+        <source src="/hero.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
-      {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-black/40" />
+      {/* Subtle Overlay */}
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
-      {/* Content / Text Layer (Screen width ka ~60% area & Left Aligned) */}
-      <div className="relative z-10 w-full md:w-[60%] text-left">
-        <div className="flex flex-col items-start">
+      {/* Main Content */}
+      <div className={`relative z-20 text-white text-left ${cinzel.className}`}>
+        <div className="flex flex-col items-start leading-none uppercase font-bold tracking-tight">
           
-          {/* Top 2 Words */}
-          <span className="text-white text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold uppercase leading-none tracking-wider drop-shadow-lg">
-            {topText}
+          {/* Top Line: Every Frame */}
+          <span className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-xl mb-2">
+            Every Frame
           </span>
 
-          {/* Sinking Shadow Text Container (Bottom 1 Word) */}
-          <div className="relative w-full flex justify-start">
-            
-            {/* 1. Main Visible White Text */}
-            <span className="relative z-10 text-white text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] font-black uppercase leading-none tracking-tight">
-              {bottomText}
-            </span>
+          {/* Bottom Line: Tells A Story (Sinking & Fading Shadow Effect) */}
+          <span 
+            className="text-5xl sm:text-7xl md:text-8xl lg:text-8xl text-white/90 drop-shadow-2xl"
+            style={{
+              // Gradient Masking jo text ko niche se dhere-dhere gayab/fade karti hai
+              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 100%)",
+              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 35%, rgba(0,0,0,0) 100%)",
+            }}
+          >
+            Tells A Story
+          </span>
 
-            {/* 2. Half-Hidden / Sinking Shadow Text Effect */}
-            <span
-              className="absolute left-0 -bottom-[4px] md:-bottom-[8px] text-white/50 text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] font-black uppercase leading-none tracking-tight scale-y-125 blur-[1px] pointer-events-none select-none"
-              style={{
-                clipPath: "polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%)",
-              }}
-            >
-              {bottomText}
-            </span>
-
-          </div>
         </div>
       </div>
     </main>

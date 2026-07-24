@@ -1,7 +1,13 @@
 'use client';
 
-import React from "react";
-import { Check } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Sparkles, Zap } from "lucide-react";
+import { Cinzel } from "next/font/google";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["700"],
+});
 
 interface PricingPlan {
   id: string;
@@ -30,7 +36,7 @@ const pricingPlans: PricingPlan[] = [
   },
   {
     id: "dedicated-editors",
-    badge: "BUSINESS",
+    badge: "MOST POPULAR",
     title: "Dedicated Editors",
     price: "$1200",
     description: "Personalized video editor with 40 hr/week dedication to your projects.",
@@ -40,7 +46,7 @@ const pricingPlans: PricingPlan[] = [
       "4K Quality",
       "Personal Content Manager",
     ],
-    isPopular: true, // Middle highlighted plan
+    isPopular: true,
   },
   {
     id: "long-form",
@@ -58,107 +64,160 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
+function PricingCard({ plan }: { plan: PricingPlan }) {
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
+
+  // 3D Tilt Effect on Mouse Move
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotX = ((y - centerY) / centerY) * -10; // Tilt angle X
+    const rotY = ((x - centerX) / centerX) * 10;  // Tilt angle Y
+
+    setRotateX(rotX);
+    setRotateY(rotY);
+    setSpotlightPos({
+      x: (x / rect.width) * 100,
+      y: (y / rect.height) * 100,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+  };
+
+  return (
+    <div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+      }}
+      className={`group relative flex flex-col justify-between p-8 sm:p-9 rounded-3xl transition-transform duration-200 ease-out cursor-pointer ${
+        plan.isPopular
+          ? "bg-[#110722] border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.3)] z-20 md:-translate-y-4"
+          : "bg-[#0c0617] border border-white/10 hover:border-purple-500/50"
+      }`}
+    >
+      {/* Dynamic Cursor Spotlight Glow Overlay */}
+      <div
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{
+          background: `radial-gradient(600px circle at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(168, 85, 247, 0.15), transparent 80%)`,
+        }}
+      />
+
+      {/* Top Header Badge */}
+      <div className="flex items-center justify-between mb-6">
+        <span
+          className={`text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 rounded-full border ${
+            plan.isPopular
+              ? "bg-purple-600/30 border-purple-400 text-purple-200"
+              : "bg-white/5 border-white/10 text-gray-400"
+          }`}
+        >
+          {plan.badge}
+        </span>
+        {plan.isPopular && (
+          <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+        )}
+      </div>
+
+      {/* Title & Price */}
+      <div className="mb-8">
+        <h3 className={`text-xl sm:text-2xl font-bold text-white mb-2 ${cinzel.className}`}>
+          {plan.title}
+        </h3>
+        
+        <div className="flex items-baseline gap-1 my-4">
+          <span className={`text-4xl sm:text-5xl font-black text-white ${cinzel.className}`}>
+            {plan.price}
+          </span>
+          <span className="text-xs text-gray-400 font-light">/ project</span>
+        </div>
+
+        <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-light min-h-[40px]">
+          {plan.description}
+        </p>
+      </div>
+
+      {/* Features Checklist */}
+      <div className="flex-1 mb-8">
+        <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/30 via-white/10 to-transparent mb-6" />
+        <ul className="space-y-4">
+          {plan.features.map((feature, idx) => (
+            <li
+              key={idx}
+              className="flex items-center gap-3 text-xs sm:text-sm text-gray-300 font-light group-hover:translate-x-1 transition-transform duration-300"
+            >
+              <div className="w-5 h-5 rounded-full bg-purple-950/80 border border-purple-500/50 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
+                <Check className="w-3 h-3 text-purple-300 group-hover:text-white stroke-[3]" />
+              </div>
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-3 mt-auto">
+        <button className="w-full py-3.5 px-6 rounded-full bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 active:scale-95">
+          Customize Package
+        </button>
+
+        <button
+          className={`w-full py-3.5 px-6 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
+            plan.isPopular
+              ? "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:scale-105"
+              : "bg-white text-purple-950 hover:bg-gray-100"
+          }`}
+        >
+          <Zap className="w-3.5 h-3.5 fill-current" />
+          <span>Subscribe Now</span>
+        </button>
+      </div>
+
+      {/* Bottom Glowing Border */}
+      <div className="absolute bottom-0 inset-x-8 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    </div>
+  );
+}
+
 export default function PricingSection() {
   return (
-    <section className="relative w-full py-24 bg-[#08050c] text-white overflow-hidden border-t border-purple-900/20 font-sans">
+    <section className="relative w-full py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden">
       
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none" />
+      {/* Background Ambient Purple Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-purple-600/20 blur-[180px] rounded-full pointer-events-none" />
 
-      {/* Main Container */}
+      {/* Heading Zone */}
+      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-20 px-4 ${cinzel.className}`}>
+        <p className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2">
+          Flexible Pricing For Every Creator
+        </p>
+        <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+          Choose Your Package
+        </h2>
+      </div>
+
+      {/* Pricing Cards Grid */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
-        
-        {/* Section Heading */}
-        <div className="text-center mb-16">
-          <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.3em] text-purple-400 mb-3 block">
-            PRICING PLANS
-          </span>
-          <h2 className="text-4xl sm:text-6xl font-black uppercase tracking-tight bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
-            Choose Your Package
-          </h2>
-        </div>
-
-        {/* Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
           {pricingPlans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative flex flex-col justify-between p-8 sm:p-9 transition-all duration-300 ${
-                plan.isPopular
-                  ? "bg-[#11091c] border-2 border-purple-500 shadow-[0_0_35px_rgba(168,85,247,0.25)] z-20 scale-102"
-                  : "bg-[#0d0716] border border-white/10 hover:border-purple-500/40 hover:bg-[#10081a]"
-              }`}
-              style={{
-                // Custom Top-Left Curved Corner (Folder Tab Effect)
-                borderTopLeftRadius: "2.5rem",
-                borderTopRightRadius: "1.25rem",
-                borderBottomLeftRadius: "1.75rem",
-                borderBottomRightRadius: "1.75rem",
-              }}
-            >
-              {/* Badge (Top-Right) */}
-              <div className="absolute top-6 right-8">
-                <span className="text-[11px] font-bold tracking-widest text-gray-400 uppercase">
-                  {plan.badge}
-                </span>
-              </div>
-
-              {/* Header Info */}
-              <div className="mb-8 mt-2">
-                <h3 className="text-xl sm:text-2xl font-black text-purple-200 mb-3 tracking-wide">
-                  {plan.title}
-                </h3>
-                
-                {/* Price */}
-                <div className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">
-                  {plan.price}
-                </div>
-
-                {/* Description */}
-                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed font-normal min-h-[40px]">
-                  {plan.description}
-                </p>
-              </div>
-
-              {/* Features List */}
-              <div className="flex-1 mb-10">
-                <ul className="space-y-4">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-3 text-xs sm:text-sm text-gray-300 font-medium">
-                      {/* Check Icon with Circle Background */}
-                      <div className="w-5 h-5 rounded-full bg-purple-600/30 border border-purple-500/50 flex items-center justify-center shrink-0">
-                        <Check className="w-3 h-3 text-purple-300 stroke-[3]" />
-                      </div>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3 mt-auto">
-                {/* Button 1: Customize */}
-                <button className="w-full py-3.5 px-6 rounded-full bg-white text-purple-950 hover:bg-gray-100 font-bold text-xs uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md">
-                  Customize Your Package
-                </button>
-
-                {/* Button 2: Subscribe */}
-                <button
-                  className={`w-full py-3.5 px-6 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 ${
-                    plan.isPopular
-                      ? "bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:from-purple-500 hover:to-fuchsia-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]"
-                      : "bg-white text-purple-950 hover:bg-gray-100 shadow-md"
-                  }`}
-                >
-                  Subscribe
-                </button>
-              </div>
-
-            </div>
+            <PricingCard key={plan.id} plan={plan} />
           ))}
         </div>
-
       </div>
+
     </section>
   );
 }
