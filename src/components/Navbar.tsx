@@ -7,11 +7,11 @@ import { Menu, X, ArrowUpRight, ChevronDown } from "lucide-react";
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const subServices = [
-    { name: "Video Editing", href: "#services" },
-    { name: "Real Estate", href: "#services" },
-    { name: "SaaS Video Animation", href: "#services" },
-  ];
+const subServices = [
+  { name: "Real Estate Media", href: "#services" },
+  { name: "Launch Videos SaaS Animation", href: "#services" },
+  { name: "Custom Video Editing", href: "#services" },
+];
 
   return (
     <header className="absolute top-0 left-0 right-0 z-50 w-full bg-transparent pt-6 px-4 sm:px-8">
@@ -32,12 +32,6 @@ export default function Navbar() {
         {/* DESKTOP NAVIGATION LINKS */}
         <nav className="hidden md:flex items-center gap-8">
           
-          <a
-            href="#about"
-            className="text-xs font-semibold tracking-wider text-gray-200 hover:text-white transition-colors uppercase"
-          >
-            About Us
-          </a>
 
           {/* SERVICES DROPDOWN */}
           <div className="relative group py-2">
@@ -64,6 +58,13 @@ export default function Navbar() {
               </div>
             </div>
           </div>
+
+          <a
+            href="#ourwork"
+            className="text-xs font-semibold tracking-wider text-gray-200 hover:text-white transition-colors uppercase"
+          >
+            Our Work
+          </a>
 
           <a
             href="#faq"

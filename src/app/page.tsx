@@ -5,7 +5,7 @@ import VideoTestimonials from "@/components/Reviews";
 import FAQSection from "@/components/Faq";
 import PricingSection from "@/components/Pricing";
 import BookingSection from "@/components/Booking";
-import OurWorkSection from "@/components/Display";
+import OurWorkSection from "@/components/OurWork";
 
 export default function Home() {
 
