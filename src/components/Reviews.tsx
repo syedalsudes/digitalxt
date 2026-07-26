@@ -85,11 +85,10 @@ export default function VideoTestimonials() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // 1. Setup Lenis and ScrollTrigger Entry Animation
+  // 1. Setup Lenis and ScrollTrigger Repeat Entrance Animation
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    // Lenis Setup
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -104,48 +103,41 @@ export default function VideoTestimonials() {
 
     gsap.ticker.lagSmoothing(0);
 
-    // GSAP Context for Scroll Entry
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 75%",
-          toggleActions: "play none none reverse",
+          end: "bottom 25%",
+          // Har baar scroll up / down hone par animation replay hogi
+          toggleActions: "restart reverse restart reverse",
         },
       });
 
-      // Initial state hide
-      gsap.set([subtitleRef.current, titleRef.current, carouselRef.current], {
-        opacity: 0,
-        y: 40,
-      });
-
-      // Sequential Entrance Animation
-      tl.to(subtitleRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 0.6,
-        ease: "power3.out",
-      })
-        .to(
-          titleRef.current,
+      // Heading Slide Down
+      tl.fromTo(
+        [subtitleRef.current, titleRef.current],
+        { opacity: 0, y: -30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.2,
+          ease: "power3.out",
+        }
+      )
+        // Carousel Frame Niche Se Upar Bouncy Pop Ke Saath Appear Hoga
+        .fromTo(
+          carouselRef.current,
+          { opacity: 0, y: 120, scale: 0.85 },
           {
             opacity: 1,
             y: 0,
-            duration: 0.8,
-            ease: "power3.out",
+            scale: 1,
+            duration: 1.1,
+            ease: "back.out(1.4)", // Bouncy Pop feel
           },
           "-=0.4"
-        )
-        .to(
-          carouselRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power3.out",
-          },
-          "-=0.5"
         );
     }, sectionRef);
 
