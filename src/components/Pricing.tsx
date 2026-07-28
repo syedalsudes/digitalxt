@@ -73,6 +73,8 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (window.innerWidth < 1024) return;
+
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -104,15 +106,15 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       style={{
         transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
       }}
-      className={`pricing-card-inner group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl transition-all duration-300 ease-out cursor-pointer h-full w-full max-w-[340px] shadow-2xl backdrop-blur-md hover:scale-105 hover:z-50 ${
+      className={`pricing-card-inner group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] shrink-0 shadow-2xl backdrop-blur-md lg:hover:scale-105 lg:hover:z-50 ${
         plan.isPopular
           ? "bg-[#140827]/95 border-2 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.35)] z-20"
-          : "bg-[#0d0718]/90 border border-white/10 hover:border-purple-500/60 z-10"
+          : "bg-[#0d0718]/90 border border-white/10 lg:hover:border-purple-500/60 z-10"
       }`}
     >
       {/* Dynamic Spotlight Glow */}
       <div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden lg:block"
         style={{
           background: `radial-gradient(500px circle at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(168, 85, 247, 0.2), transparent 80%)`,
         }}
@@ -159,7 +161,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           {plan.features.map((feature, idx) => (
             <li
               key={idx}
-              className="flex items-center gap-2 text-xs text-gray-300 font-light group-hover:translate-x-1 transition-transform duration-300"
+              className="flex items-center gap-2 text-xs text-gray-300 font-light lg:group-hover:translate-x-1 transition-transform duration-300"
             >
               <div className="w-4 h-4 rounded-full bg-purple-950/80 border border-purple-500/50 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
                 <Check className="w-2.5 h-2.5 text-purple-300 group-hover:text-white stroke-[3]" />
@@ -219,79 +221,82 @@ export default function PricingSection() {
 
       gsap.set([subtitleRef.current, titleRef.current], {
         opacity: 0,
-        y: 30,
+        y: 20,
       });
 
-      const mainTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "+=200%",
-          scrub: 1.2,
-          pin: true,
-        },
-      });
+      const mm = gsap.matchMedia();
 
-      // 1. Heading Fade In
-      mainTl.to([subtitleRef.current, titleRef.current], {
-        opacity: 1,
-        y: 0,
-        stagger: 0.15,
-        duration: 0.5,
-      });
-
-      // 2. Custom Elevation: First Card raised (y: -10), Center Card Highest (y: -30), Last Card slightly lower (y: 15)
-      gsap.set(cards[0], { rotate: -6, y: -10, transformOrigin: "bottom center" });
-      gsap.set(cards[1], { rotate: 0, y: -30, transformOrigin: "bottom center" });
-      gsap.set(cards[2], { rotate: 6, y: 15, transformOrigin: "bottom center" });
-
-      // 3. Fall animation to right side
-      mainTl.to(cards[0], {
-        rotate: 30,
-        xPercent: 110,
-        yPercent: 40,
-        opacity: 0,
-        ease: "power2.inOut",
-        duration: 1,
-      }, "+=0.3");
-
-      mainTl.to(cards[1], {
-        rotate: 25,
-        xPercent: 90,
-        yPercent: 30,
-        opacity: 0,
-        ease: "power2.inOut",
-        duration: 1,
-      }, "-=0.7");
-
-      mainTl.to(cards[2], {
-        rotate: 20,
-        xPercent: 70,
-        yPercent: 20,
-        opacity: 0,
-        ease: "power2.inOut",
-        duration: 1,
-      }, "-=0.7");
-
-      // 4. Return animation from left side back to elevated positions
-      mainTl.fromTo(
-        cards,
-        {
-          xPercent: -110,
-          rotate: -30,
-          yPercent: 30,
+      // Desktop Animations (Large Screens >= 1024px)
+      mm.add("(min-width: 1024px)", () => {
+        gsap.set(cards, {
+          y: 60,
           opacity: 0,
-        },
-        {
-          xPercent: 0,
-          rotate: (i) => (i === 0 ? -6 : i === 1 ? 0 : 6),
-          y: (i) => (i === 0 ? -10 : i === 1 ? -30 : 15),
+        });
+
+        const mainTl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 65%",
+            once: true,
+          },
+        });
+
+        mainTl.to([subtitleRef.current, titleRef.current], {
           opacity: 1,
-          stagger: 0.2,
-          duration: 1.2,
+          y: 0,
+          stagger: 0.12,
+          duration: 0.6,
           ease: "power3.out",
-        }
-      );
+        });
+
+        mainTl.to(
+          cards,
+          {
+            y: (i) => (i === 1 ? -15 : 10), // Middle card slightly higher
+            rotate: (i) => (i === 0 ? -3 : i === 2 ? 3 : 0), // Slight tilt on desktop
+            opacity: 1,
+            stagger: 0.15,
+            duration: 0.8,
+            ease: "back.out(1.2)",
+          },
+          "-=0.3"
+        );
+      });
+
+      // Mobile & Tablet Animations (< 1024px)
+      mm.add("(max-width: 1023px)", () => {
+        gsap.to([subtitleRef.current, titleRef.current], {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.12,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        });
+
+        // Straight cards reveal without rotation
+        gsap.fromTo(
+          cards,
+          { opacity: 0, y: 30, rotate: 0 },
+          {
+            opacity: 1,
+            y: 0,
+            rotate: 0,
+            duration: 0.6,
+            stagger: 0.12,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: cardsWrapperRef.current,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      });
 
     }, sectionRef);
 
@@ -304,35 +309,35 @@ export default function PricingSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full bg-[#06030a] text-white overflow-hidden flex flex-col justify-start pt-16 pb-32 md:pt-20 md:pb-40"
+      className="relative w-full bg-[#06030a] text-white overflow-hidden flex flex-col justify-start pt-16 pb-20 md:pt-24 md:pb-32"
     >
       {/* Background Ambient Purple Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[550px] bg-purple-600/15 blur-[180px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] lg:w-[850px] lg:h-[550px] bg-purple-600/15 blur-[120px] lg:blur-[180px] rounded-full pointer-events-none" />
 
       {/* Heading Zone */}
-      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 px-4 mb-8 ${cinzel.className}`}>
+      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 px-4 mb-10 lg:mb-16 ${cinzel.className}`}>
         <p
           ref={subtitleRef}
-          className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2"
+          className="text-xs sm:text-sm uppercase tracking-[0.25em] md:tracking-[0.4em] text-purple-300/60 mb-3"
         >
           Flexible Pricing For Every Creator
         </p>
         <h2
           ref={titleRef}
-          className="text-3xl sm:text-5xl md:text-6xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
+          className="text-2xl sm:text-4xl lg:text-6xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
         >
           Choose Your Package
         </h2>
       </div>
 
-      {/* Side-by-side Grid */}
-      <div className="relative z-10 w-full max-w-5xl mx-auto flex-1 flex items-start justify-center px-4 mt-6 pb-12">
+      {/* Responsive Cards Container */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
         <div
           ref={cardsWrapperRef}
-          className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4 w-full items-center justify-items-center"
+          className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-8 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
         >
           {pricingPlans.map((plan) => (
-            <div key={plan.id} className="w-full flex justify-center">
+            <div key={plan.id} className="snap-center shrink-0 flex justify-center">
               <PricingCard plan={plan} />
             </div>
           ))}

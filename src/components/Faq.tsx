@@ -69,14 +69,16 @@ export default function FAQSection() {
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
+      touchMultiplier: 1.5,
     });
 
     lenis.on("scroll", ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    const updateLenis = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
 
+    gsap.ticker.add(updateLenis);
     gsap.ticker.lagSmoothing(0);
 
     // 2. GSAP Scroll Animations Context
@@ -85,7 +87,7 @@ export default function FAQSection() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 75%",
-          toggleActions: "play none none reverse",
+          toggleActions: "restart reverse restart reverse",
         },
       });
 
@@ -119,14 +121,13 @@ export default function FAQSection() {
           },
           "-=0.3"
         )
-        // Staggered sequence: har ek FAQ box step-by-step upar aayega
         .to(
           faqItems,
           {
             opacity: 1,
             y: 0,
             duration: 0.6,
-            stagger: 0.12, // Gap between each item
+            stagger: 0.12,
             ease: "power3.out",
           },
           "-=0.4"
@@ -145,6 +146,7 @@ export default function FAQSection() {
 
     return () => {
       ctx.revert();
+      gsap.ticker.remove(updateLenis);
       lenis.destroy();
     };
   }, []);
@@ -156,33 +158,33 @@ export default function FAQSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full py-28 bg-[#08050c] text-white overflow-hidden border-t border-purple-950/40"
+      className="relative w-full py-20 sm:py-28 2xl:py-36 bg-[#08050c] text-white overflow-hidden border-t border-purple-950/40 select-none"
     >
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-purple-700/10 blur-[180px] rounded-full pointer-events-none" />
+      {/* Background Ambient Glows Scaled */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[700px] 2xl:w-[1000px] h-[350px] sm:h-[400px] 2xl:h-[600px] bg-purple-700/10 blur-[120px] sm:blur-[180px] 2xl:blur-[220px] rounded-full pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8">
+      <div className="relative z-10 max-w-5xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Background Ambient Purple Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-purple-600/20 blur-[170px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] 2xl:w-[1100px] h-[350px] sm:h-[550px] 2xl:h-[750px] bg-purple-600/20 blur-[120px] sm:blur-[170px] 2xl:blur-[220px] rounded-full pointer-events-none" />
 
         {/* Heading */}
-        <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 mb-16 ${cinzel.className}`}>
+        <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 mb-12 sm:mb-16 2xl:mb-24 ${cinzel.className}`}>
           <p
             ref={subtitleRef}
-            className="text-xs sm:text-sm uppercase tracking-[0.4em] text-purple-300/60 mb-2"
+            className="text-[10px] sm:text-xs 2xl:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/60 mb-2 font-semibold"
           >
             Support & Queries
           </p>
           <h2
             ref={titleRef}
-            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl 2xl:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg"
           >
             Frequently Asked Questions
           </h2>
         </div>
 
         {/* FAQ Accordion List */}
-        <div ref={faqListRef} className="flex flex-col gap-4">
+        <div ref={faqListRef} className="flex flex-col gap-3 sm:gap-4 2xl:gap-6">
           {faqData.map((faq, index) => {
             const isOpen = openId === faq.id;
             const formattedIndex = index < 9 ? `0${index + 1}` : `${index + 1}`;
@@ -190,7 +192,7 @@ export default function FAQSection() {
             return (
               <div
                 key={faq.id}
-                className={`group rounded-2xl border transition-all duration-500 overflow-hidden backdrop-blur-xl ${
+                className={`group rounded-xl sm:rounded-2xl 2xl:rounded-3xl border transition-all duration-500 overflow-hidden backdrop-blur-xl ${
                   isOpen
                     ? "bg-gradient-to-b from-[#120a1f] to-[#0c0615] border-purple-500/50 shadow-[0_10px_30px_rgba(147,51,234,0.15)]"
                     : "bg-[#0a0612]/70 border-white/10 hover:border-purple-500/30 hover:bg-[#0f081a]"
@@ -199,26 +201,26 @@ export default function FAQSection() {
                 {/* Question Trigger */}
                 <button
                   onClick={() => toggleFAQ(faq.id)}
-                  className="w-full text-left px-6 sm:px-8 py-6 flex items-center justify-between gap-6 focus:outline-none cursor-pointer"
+                  className="w-full text-left px-4 sm:px-8 2xl:px-10 py-5 sm:py-6 2xl:py-8 flex items-center justify-between gap-3 sm:gap-6 focus:outline-none cursor-pointer"
                 >
-                  <div className="flex items-center gap-6">
-                    <span className={`text-lg sm:text-xl font-bold tracking-widest ${isOpen ? "text-purple-400" : "text-white/30"} ${cinzel.className}`}>
+                  <div className="flex items-center gap-3 sm:gap-6">
+                    <span className={`text-base sm:text-xl 2xl:text-2xl font-bold tracking-widest ${isOpen ? "text-purple-400" : "text-white/30"} ${cinzel.className}`}>
                       {formattedIndex}
                     </span>
-                    <span className="font-semibold text-base sm:text-lg text-white/90 tracking-wide group-hover:text-purple-200 transition-colors">
+                    <span className="font-semibold text-sm sm:text-lg 2xl:text-xl text-white/90 tracking-wide group-hover:text-purple-200 transition-colors">
                       {faq.question}
                     </span>
                   </div>
 
                   {/* Chevron Icon */}
                   <div
-                    className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center border transition-transform duration-500 ${
+                    className={`shrink-0 w-7 h-7 sm:w-9 sm:h-9 2xl:w-11 2xl:h-11 rounded-full flex items-center justify-center border transition-transform duration-500 ${
                       isOpen
                         ? "bg-purple-600 border-purple-400 text-white rotate-180 shadow-lg shadow-purple-600/40"
                         : "bg-white/5 border-white/10 text-purple-300 group-hover:border-purple-500/40"
                     }`}
                   >
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 2xl:w-6 2xl:h-6" />
                   </div>
                 </button>
 
@@ -226,12 +228,12 @@ export default function FAQSection() {
                 <div
                   className={`grid transition-all duration-500 ease-in-out ${
                     isOpen
-                      ? "grid-rows-[1fr] opacity-100 pb-8 px-6 sm:px-8 pl-16 sm:pl-20"
-                      : "grid-rows-[0fr] opacity-0 pb-0 px-6 sm:px-8 pl-16 sm:pl-20"
+                      ? "grid-rows-[1fr] opacity-100 pb-6 sm:pb-8 2xl:pb-10 px-4 sm:px-8 2xl:px-10 pl-10 sm:pl-20 2xl:pl-24"
+                      : "grid-rows-[0fr] opacity-0 pb-0 px-4 sm:px-8 2xl:px-10 pl-10 sm:pl-20 2xl:pl-24"
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed font-light border-t border-purple-900/30 pt-4">
+                    <p className="text-gray-300 text-xs sm:text-base 2xl:text-lg leading-relaxed font-light border-t border-purple-900/30 pt-3 sm:pt-4 2xl:pt-6">
                       {faq.answer}
                     </p>
                   </div>
@@ -244,15 +246,15 @@ export default function FAQSection() {
         {/* Bottom Help Banner */}
         <div
           ref={bannerRef}
-          className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-purple-950/20 via-[#120a1f] to-purple-950/20 border border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left"
+          className="mt-12 sm:mt-16 2xl:mt-24 p-6 sm:p-8 2xl:p-12 rounded-2xl 2xl:rounded-3xl bg-gradient-to-r from-purple-950/20 via-[#120a1f] to-purple-950/20 border border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left"
         >
           <div>
-            <h4 className={`text-lg font-bold text-white mb-1 ${cinzel.className}`}>Still have questions?</h4>
-            <p className="text-gray-400 text-sm">Can't find the answer you're looking for? Feel free to reach out to our team.</p>
+            <h4 className={`text-base sm:text-lg 2xl:text-2xl font-bold text-white mb-1 ${cinzel.className}`}>Still have questions?</h4>
+            <p className="text-gray-400 text-xs sm:text-sm 2xl:text-base">Can't find the answer you're looking for? Feel free to reach out to our team.</p>
           </div>
           <a
             href="#contact"
-            className="px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:scale-105 transition-transform shadow-lg shadow-purple-600/30 shrink-0"
+            className="px-5 sm:px-6 2xl:px-8 py-2.5 sm:py-3 2xl:py-4 rounded-full text-[10px] sm:text-xs 2xl:text-sm font-bold uppercase tracking-wider text-white bg-gradient-to-r from-purple-600 to-fuchsia-600 hover:scale-105 transition-transform shadow-lg shadow-purple-600/30 shrink-0"
           >
             Get in Touch
           </a>
