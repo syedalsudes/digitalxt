@@ -13,7 +13,7 @@ const cinzel = Cinzel({
   weight: ["700"],
 });
 
-// Dynamic Video List
+// Dynamic Video List (Add as many videos as needed)
 const worksList = [
   { id: 1, video: "/videos/ourwork/workvid1.mp4" },
   { id: 2, video: "/videos/ourwork/workvid2.mp4" },
@@ -29,40 +29,13 @@ export default function OurWorkSection() {
   const headerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  const totalCards = worksList.length;
-  const angleStep = 360 / totalCards;
+  // Active Center Video Index
+  const [activeIndex, setActiveIndex] = useState(1);
 
-  // Responsive States
-  const [radius, setRadius] = useState(380);
-  const [perspective, setPerspective] = useState(1000);
-  const [rotationAngle, setRotationAngle] = useState(0);
+  // Drag / Swipe Tracking States
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
-  const [dragStartAngle, setDragStartAngle] = useState(0);
-
-  // Screen Resize Listener for Compact Mobile 3D Bounds
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        // Mobile: Tight Radius & Perspective taake Left/Right videos peek karein
-        setRadius(135);
-        setPerspective(550);
-      } else if (width < 1024) {
-        // Tablet
-        setRadius(240);
-        setPerspective(800);
-      } else {
-        // Desktop
-        setRadius(Math.max(380, Math.round(280 / Math.tan(Math.PI / totalCards))));
-        setPerspective(1000);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [totalCards]);
+  const [dragOffset, setDragOffset] = useState(0);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -107,24 +80,39 @@ export default function OurWorkSection() {
     };
   }, []);
 
-  // Lag-Free Drag / Touch Handlers
+  // Navigation Logic
+  const nextVideo = () => {
+    setActiveIndex((prev) => (prev + 1) % worksList.length);
+  };
+
+  const prevVideo = () => {
+    setActiveIndex((prev) => (prev - 1 + worksList.length) % worksList.length);
+  };
+
+  // Drag / Touch Event Handlers
   const handleDragStart = (clientX: number) => {
     setIsDragging(true);
     setStartX(clientX);
-    setDragStartAngle(rotationAngle);
+    setDragOffset(0);
   };
 
   const handleDragMove = (clientX: number) => {
     if (!isDragging) return;
     const diff = clientX - startX;
-    setRotationAngle(dragStartAngle + diff * 0.45);
+    setDragOffset(diff);
   };
 
   const handleDragEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
-    // Nearest Video Snap
-    setRotationAngle((prev) => Math.round(prev / angleStep) * angleStep);
+
+    // Swipe Threshold (40px)
+    if (dragOffset < -40) {
+      nextVideo();
+    } else if (dragOffset > 40) {
+      prevVideo();
+    }
+    setDragOffset(0);
   };
 
   return (
@@ -141,8 +129,8 @@ export default function OurWorkSection() {
         </defs>
       </svg>
 
-      {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[700px] md:w-[1100px] h-[220px] sm:h-[400px] md:h-[600px] bg-purple-600/15 blur-[100px] sm:blur-[170px] rounded-full pointer-events-none" />
+      {/* Background Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[700px] md:w-[1100px] h-[220px] sm:h-[400px] md:h-[600px] bg-purple-600/15 blur-[120px] sm:blur-[170px] rounded-full pointer-events-none" />
 
       {/* Header */}
       <div
@@ -157,41 +145,33 @@ export default function OurWorkSection() {
         </h2>
       </div>
 
-      {/* 3D CAROUSEL CONTAINER */}
+      {/* PANORAMIC CURVED DECK CAROUSEL */}
       <div
-        className="relative z-10 w-full h-[210px] sm:h-[320px] md:h-[420px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none px-2"
-        style={{ perspective: `${perspective}px` }}
-        // Mouse Handlers
+        className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none px-2"
+        style={{ perspective: "1000px" }}
+        // Mouse Drag Handlers
         onMouseDown={(e) => handleDragStart(e.clientX)}
         onMouseMove={(e) => handleDragMove(e.clientX)}
         onMouseUp={handleDragEnd}
         onMouseLeave={handleDragEnd}
-        // Touch Handlers for Mobile
+        // Finger Touch Swipe Handlers for Mobile & Tablet
         onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
         onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
         onTouchEnd={handleDragEnd}
       >
-        {/* 3D Rotating Ring */}
-        <div
-          className={`relative w-[145px] sm:w-[270px] md:w-[380px] aspect-[16/9] ${
-            isDragging ? "transition-none" : "transition-transform duration-500 ease-out"
-          }`}
-          style={{
-            transformStyle: "preserve-3d",
-            transform: `rotateY(${rotationAngle}deg)`,
-          }}
-        >
+        <div className="relative w-full max-w-[1280px] h-full flex items-center justify-center">
           {worksList.map((item, index) => {
-            const cardAngle = index * angleStep;
+            // Calculate relative position offset from activeIndex
+            let offset = index - activeIndex;
+            if (offset > worksList.length / 2) offset -= worksList.length;
+            if (offset < -worksList.length / 2) offset += worksList.length;
 
             return (
-              <WorkCard3D
+              <WorkCard
                 key={`${item.id}-${index}`}
                 item={item}
-                angle={cardAngle}
-                parentRotation={rotationAngle}
-                radius={radius}
-                angleStep={angleStep}
+                offset={offset}
+                onClick={() => setActiveIndex(index)}
               />
             );
           })}
@@ -214,90 +194,115 @@ export default function OurWorkSection() {
   );
 }
 
-{/* Individual 3D Card Component */}
-function WorkCard3D({
+{/* Individual Panoramic Video Card Component */}
+function WorkCard({
   item,
-  angle,
-  parentRotation,
-  radius,
-  angleStep,
+  offset,
+  onClick,
 }: {
   item: { id: number; video: string };
-  angle: number;
-  parentRotation: number;
-  radius: number;
-  angleStep: number;
+  offset: number;
+  onClick: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isCenter = offset === 0;
 
-  // Shortest angle from front
-  const currentFacingAngle = (angle + parentRotation) % 360;
-  let normalizedAngle = (currentFacingAngle + 360) % 360;
-  if (normalizedAngle > 180) normalizedAngle = 360 - normalizedAngle;
-
-  // Visibility & Scale settings for Mobile Viewport Hints
-  let opacity = 0.2;
-  let scale = 0.7;
-  let brightness = "brightness(50%)";
-  let isFront = false;
-
-  if (normalizedAngle < angleStep * 0.4) {
-    // Front Center
-    isFront = true;
-    opacity = 1;
-    scale = 1;
-    brightness = "brightness(100%)";
-  } else if (normalizedAngle < angleStep * 1.4) {
-    // 1st Adjacent Left & Right (Prominently Visible on Mobile)
-    opacity = 0.9;
-    scale = 0.85;
-    brightness = "brightness(85%)";
-  } else if (normalizedAngle < angleStep * 2.4) {
-    // 2nd Adjacent Left & Right
-    opacity = 0.5;
-    scale = 0.72;
-    brightness = "brightness(65%)";
-  }
-
+  // Sound Control on Mouse Hover
   const handleMouseEnter = () => {
     if (videoRef.current) {
-      videoRef.current.muted = false;
+      videoRef.current.muted = false; // Audio ON on Hover
     }
   };
 
   const handleMouseLeave = () => {
     if (videoRef.current) {
-      videoRef.current.muted = true;
+      videoRef.current.muted = true; // Audio MUTE when mouse leaves
+    }
+  };
+
+  // Dynamic Panoramic Arc Transforms
+  const getCardStyle = (): React.CSSProperties => {
+    if (offset === 0) {
+      // Center Main Card (Focused & Elevated)
+      return {
+        transform: "translateX(0%) scale(1) translateZ(0px) rotateY(0deg)",
+        zIndex: 30,
+        opacity: 1,
+        filter: "brightness(100%)",
+      };
+    } else if (offset === 1) {
+      // Immediate Right Video
+      return {
+        transform: "translateX(62%) scale(0.82) translateZ(-120px) rotateY(-22deg)",
+        zIndex: 20,
+        opacity: 0.85,
+        filter: "brightness(75%)",
+      };
+    } else if (offset === -1) {
+      // Immediate Left Video
+      return {
+        transform: "translateX(-62%) scale(0.82) translateZ(-120px) rotateY(22deg)",
+        zIndex: 20,
+        opacity: 0.85,
+        filter: "brightness(75%)",
+      };
+    } else if (offset === 2) {
+      // Outer Right Video
+      return {
+        transform: "translateX(110%) scale(0.68) translateZ(-250px) rotateY(-35deg)",
+        zIndex: 10,
+        opacity: 0.45,
+        filter: "brightness(50%)",
+      };
+    } else if (offset === -2) {
+      // Outer Left Video
+      return {
+        transform: "translateX(-110%) scale(0.68) translateZ(-250px) rotateY(35deg)",
+        zIndex: 10,
+        opacity: 0.45,
+        filter: "brightness(50%)",
+      };
+    } else {
+      // Hidden Back Cards
+      return {
+        transform:
+          offset > 0
+            ? "translateX(160%) scale(0.5) rotateY(-45deg)"
+            : "translateX(-160%) scale(0.5) rotateY(45deg)",
+        zIndex: 0,
+        opacity: 0,
+        pointerEvents: "none",
+      };
     }
   };
 
   return (
     <div
+      onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="absolute inset-0 w-full h-full transition-all duration-300 ease-out transform-gpu will-change-transform pointer-events-auto"
+      className="absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform"
       style={{
-        transform: `rotateY(${angle}deg) translateZ(${radius}px)`,
-        backfaceVisibility: "visible",
-        opacity,
-        filter: brightness,
+        ...getCardStyle(),
         WebkitBoxReflect:
-          "below 6px linear-gradient(transparent 70%, rgba(0, 0, 0, 0.45))",
+          "below 8px linear-gradient(transparent 65%, rgba(0, 0, 0, 0.45))",
       }}
     >
       <div
-        className={`relative w-full h-full transition-transform duration-300 ${
-          isFront ? "drop-shadow-[0_8px_20px_rgba(168,85,247,0.45)]" : ""
+        className={`relative w-full h-full transition-all duration-500 ${
+          isCenter
+            ? "drop-shadow-[0_15px_30px_rgba(168,85,247,0.45)]"
+            : "hover:opacity-100"
         }`}
-        style={{ transform: `scale(${scale})` }}
       >
-        {/* Curved Frame Container */}
+        {/* Scalable Curved Frame Container */}
         <div className="relative w-full h-full">
           {/* Curved Clip-Path Container */}
           <div
             className="relative w-full h-full bg-[#0a0514] overflow-hidden"
             style={{ clipPath: "url(#curvedScreenClip)" }}
           >
+            {/* Continuous Video */}
             <video
               ref={videoRef}
               src={item.video}
@@ -309,7 +314,7 @@ function WorkCard3D({
               className="w-full h-full object-cover scale-105 pointer-events-none"
             />
 
-            {/* Glass Reflection */}
+            {/* Screen Glass Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/60 pointer-events-none" />
           </div>
 
@@ -330,17 +335,17 @@ function WorkCard3D({
                 <stop
                   offset="0%"
                   stopColor="#d8b4fe"
-                  stopOpacity={isFront ? "0.9" : "0.4"}
+                  stopOpacity={isCenter ? "0.9" : "0.4"}
                 />
                 <stop
                   offset="50%"
                   stopColor="#a855f7"
-                  stopOpacity={isFront ? "0.6" : "0.3"}
+                  stopOpacity={isCenter ? "0.6" : "0.3"}
                 />
                 <stop
                   offset="100%"
                   stopColor="#c026d3"
-                  stopOpacity={isFront ? "0.9" : "0.4"}
+                  stopOpacity={isCenter ? "0.9" : "0.4"}
                 />
               </linearGradient>
             </defs>
@@ -348,7 +353,7 @@ function WorkCard3D({
               d="M 20 34 Q 500 78 980 34 C 990 34 1000 45 1000 62 L 1000 500 C 1000 517 990 528 980 528 Q 500 484 20 528 C 10 528 0 517 0 500 L 0 62 C 0 45 10 34 20 34 Z"
               fill="none"
               stroke={`url(#borderGrad-${item.id})`}
-              strokeWidth={isFront ? "4" : "2.5"}
+              strokeWidth={isCenter ? "4" : "2.5"}
             />
           </svg>
         </div>
