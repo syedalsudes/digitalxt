@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, X } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -26,28 +26,63 @@ const testimonials: Testimonial[] = [
   { id: "6", videoSrc: "/videos/review6.mp4" },
 ];
 
-function VideoCard({ item, isActive }: { item: Testimonial; isActive: boolean }) {
+function VideoCard({
+  item,
+  isActive,
+  onVideoClick,
+  onMakeActive, // Naya prop taake click hone par center ho jaye
+}: {
+  item: Testimonial;
+  isActive: boolean;
+  onVideoClick: (videoSrc: string) => void;
+  onMakeActive: () => void;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const handleMouseEnter = () => {
-    if (videoRef.current) {
+    if (window.innerWidth >= 768 && videoRef.current) {
       videoRef.current.muted = false;
-      videoRef.current
-        .play()
-        .catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play();
-          }
-        });
+      videoRef.current.play().catch(() => {
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          videoRef.current.play();
+        }
+      });
     }
   };
 
   const handleMouseLeave = () => {
-    if (videoRef.current) {
+    if (window.innerWidth >= 768 && videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // AGAR CENTER MEIN NAHI HAI, TOH PEHLE CENTER MEIN LAO
+    if (!isActive) {
+      onMakeActive();
+      return;
+    }
+
+    // AGAR CENTER MEIN HAI, TOH VIDEO PLAY/PAUSE KARO
+    if (window.innerWidth < 768) {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+      onVideoClick(item.videoSrc);
+    } else {
+      if (videoRef.current) {
+        if (videoRef.current.paused) {
+          videoRef.current.muted = false;
+          videoRef.current.play();
+        } else {
+          videoRef.current.pause();
+        }
+      }
     }
   };
 
@@ -55,10 +90,11 @@ function VideoCard({ item, isActive }: { item: Testimonial; isActive: boolean })
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative w-[150px] xs:w-[170px] sm:w-[210px] 2xl:w-[260px] aspect-[9/16] rounded-2xl sm:rounded-3xl 2xl:rounded-[32px] overflow-hidden bg-[#0c0617] border transition-all duration-500 ease-out cursor-pointer select-none ${
+      onClick={handleClick}
+      className={`relative w-[130px] xs:w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] 2xl:w-[250px] h-[230px] sm:h-[310px] md:h-[340px] 2xl:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0c0617] border transition-all duration-300 ease-out cursor-pointer select-none group shadow-2xl ${
         isActive
-          ? "border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.55)] z-30"
-          : "border-white/20 hover:border-purple-400/80 z-20"
+          ? "border-purple-400 shadow-[0_10px_35px_rgba(168,85,247,0.45)] z-30"
+          : "border-white/15 hover:border-purple-400/60 z-20"
       }`}
     >
       <video
@@ -67,10 +103,20 @@ function VideoCard({ item, isActive }: { item: Testimonial; isActive: boolean })
         loop
         playsInline
         preload="metadata"
-        className="w-full h-full object-cover transition-all duration-500 ease-out pointer-events-none"
+        className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 pointer-events-none"
       >
         <source src={item.videoSrc} type="video/mp4" />
       </video>
+
+      {/* Glass overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+
+      {/* Play Icon Hint on Mobile/Hover */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 sm:group-hover:opacity-0 transition-opacity">
+        <div className="w-9 h-9 rounded-full bg-purple-600/80 backdrop-blur-md flex items-center justify-center text-white">
+          <Play className="w-4 h-4 fill-white ml-0.5" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -79,6 +125,12 @@ export default function VideoTestimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [screenType, setScreenType] = useState<"mobile" | "desktop" | "large">("desktop");
+  const [selectedMobileVideo, setSelectedMobileVideo] = useState<string | null>(null);
+
+  // Smooth Drag logic
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef<number>(0);
+  const wheelTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // GSAP References
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -86,7 +138,7 @@ export default function VideoTestimonials() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Screen resize detector for small mobile, standard desktop & 1440px+ screens
+  // Screen Resize Detector
   useEffect(() => {
     const checkScreen = () => {
       const width = window.innerWidth;
@@ -103,7 +155,7 @@ export default function VideoTestimonials() {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // 1. Setup Lenis and ScrollTrigger Repeat Entrance Animation
+  // 1. Setup Lenis and ScrollTrigger Entrance Animation
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -133,7 +185,6 @@ export default function VideoTestimonials() {
         },
       });
 
-      // Heading Slide Down
       tl.fromTo(
         [subtitleRef.current, titleRef.current],
         { opacity: 0, y: -30 },
@@ -144,20 +195,18 @@ export default function VideoTestimonials() {
           stagger: 0.2,
           ease: "power3.out",
         }
-      )
-        // Carousel Frame Entrance
-        .fromTo(
-          carouselRef.current,
-          { opacity: 0, y: 120, scale: 0.85 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 1.1,
-            ease: "back.out(1.4)",
-          },
-          "-=0.4"
-        );
+      ).fromTo(
+        carouselRef.current,
+        { opacity: 0, y: 80, scale: 0.9 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.9,
+          ease: "back.out(1.2)",
+        },
+        "-=0.4"
+      );
     }, sectionRef);
 
     return () => {
@@ -169,59 +218,91 @@ export default function VideoTestimonials() {
 
   // 2. Auto Rotation Timer
   useEffect(() => {
-    if (isHovered) return;
+    if (isHovered || isDragging || selectedMobileVideo) return;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % testimonials.length);
-    }, 3500);
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, [isHovered]);
+  }, [isHovered, isDragging, selectedMobileVideo]);
 
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev + 1) % testimonials.length);
+  // 3. Stop videos on section leave
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            const videos = sectionRef.current?.querySelectorAll("video");
+            videos?.forEach((vid) => {
+              vid.pause();
+              vid.muted = true;
+            });
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Drag & Swipe Handlers
+  const handleDragStart = (clientX: number) => {
+    setIsDragging(true);
+    dragStartX.current = clientX;
   };
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+  const handleDragEnd = (clientX: number) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    const diff = dragStartX.current - clientX;
 
-  // Touch Swipe Handlers for Mobile
-  const touchStartX = useRef<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const diff = touchStartX.current - touchEndX;
-
-    if (Math.abs(diff) > 40) {
+    if (Math.abs(diff) > 25) {
       if (diff > 0) {
-        handleNext();
+        setActiveIndex((prev) => (prev + 1) % testimonials.length);
       } else {
-        handlePrev();
+        setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
       }
     }
-    touchStartX.current = null;
+  };
+
+  // Horizontal Trackpad/Mouse Wheel Scroll
+  const handleWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 15) {
+      if (!wheelTimeout.current) {
+        if (e.deltaX > 0) {
+          setActiveIndex((prev) => (prev + 1) % testimonials.length);
+        } else {
+          setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+        }
+        
+        // Timeout to prevent too rapid scrolling
+        wheelTimeout.current = setTimeout(() => {
+          wheelTimeout.current = null;
+        }, 350);
+      }
+    }
   };
 
   return (
     <section
       ref={sectionRef}
-      className="relative w-full py-20 sm:py-28 2xl:py-36 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden select-none"
+      className="relative w-full py-12 sm:py-20 2xl:py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden select-none"
     >
-      {/* Background Ambient Glow Scaled */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[850px] 2xl:w-[1100px] h-[350px] sm:h-[550px] 2xl:h-[700px] bg-purple-600/20 blur-[120px] sm:blur-[180px] 2xl:blur-[220px] rounded-full pointer-events-none" />
+      {/* Ambient Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[750px] 2xl:w-[1000px] h-[300px] sm:h-[450px] 2xl:h-[600px] bg-purple-600/15 blur-[100px] sm:blur-[160px] 2xl:blur-[200px] rounded-full pointer-events-none" />
 
-      {/* Heading */}
+      {/* Heading (Spacing barha di gayi hai: mb-16 sm:mb-24 2xl:mb-32) */}
       <div
-        className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 mb-12 sm:mb-16 2xl:mb-24 px-4 ${cinzel.className}`}
+        className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 mb-16 sm:mb-24 2xl:mb-32 px-4 ${cinzel.className}`}
       >
         <p
           ref={subtitleRef}
-          className="text-[10px] sm:text-xs 2xl:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/60 mb-2 font-semibold"
+          className="text-[10px] sm:text-xs 2xl:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/60 mb-1.5 font-semibold"
         >
           Real Stories, Real Results
         </p>
@@ -233,39 +314,30 @@ export default function VideoTestimonials() {
         </h2>
       </div>
 
-      {/* Carousel Container */}
+      {/* Interactive Drag & Swipe Track */}
       <div
         ref={carouselRef}
-        className="relative w-full max-w-6xl 2xl:max-w-[1400px] mx-auto px-2 sm:px-4 flex flex-col items-center justify-center min-h-[380px] sm:min-h-[460px] 2xl:min-h-[580px] touch-pan-y"
+        className="relative w-full max-w-6xl 2xl:max-w-[1500px] mx-auto px-2 sm:px-4 flex flex-col items-center justify-center min-h-[280px] sm:min-h-[360px] 2xl:min-h-[440px] cursor-grab active:cursor-grabbing touch-none"
         onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
+        onMouseLeave={() => {
+          setIsHovered(false);
+          setIsDragging(false);
+        }}
+        onMouseDown={(e) => handleDragStart(e.clientX)}
+        onMouseUp={(e) => handleDragEnd(e.clientX)}
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+        onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
+        onWheel={handleWheel}
       >
-        {/* Navigation Buttons */}
-        <button
-          onClick={handlePrev}
-          aria-label="Previous Review"
-          className="absolute left-1 sm:left-4 2xl:left-8 z-40 w-9 h-9 sm:w-11 sm:h-11 2xl:w-14 2xl:h-14 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl flex items-center justify-center text-white hover:border-purple-400 hover:bg-purple-950/60 transition-all duration-300 cursor-pointer shadow-xl"
-        >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 2xl:w-8 2xl:h-8" />
-        </button>
-
-        <button
-          onClick={handleNext}
-          aria-label="Next Review"
-          className="absolute right-1 sm:right-4 2xl:right-8 z-40 w-9 h-9 sm:w-11 sm:h-11 2xl:w-14 2xl:h-14 rounded-full bg-black/80 border border-white/20 backdrop-blur-xl flex items-center justify-center text-white hover:border-purple-400 hover:bg-purple-950/60 transition-all duration-300 cursor-pointer shadow-xl"
-        >
-          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 2xl:w-8 2xl:h-8" />
-        </button>
-
-        {/* Rotator Ring Track */}
-        <div className="relative w-full flex items-center justify-center h-[380px] sm:h-[460px] 2xl:h-[580px] [perspective:1000px] 2xl:[perspective:1600px]">
+        {/* Curved Fan Rotator Ring */}
+        <div className="relative w-full flex items-center justify-center h-[280px] sm:h-[360px] 2xl:h-[440px] [perspective:1200px]">
           {testimonials.map((item, index) => {
             const total = testimonials.length;
             const offset = (index - activeIndex + total) % total;
 
             let xPos = 0;
+            let yPos = 0;
+            let rotateZ = 0;
             let rotateY = 0;
             let scale = 0.8;
             let opacity = 0;
@@ -274,40 +346,51 @@ export default function VideoTestimonials() {
             if (offset === 0) {
               // CENTER ACTIVE VIDEO
               xPos = 0;
-              scale = screenType === "mobile" ? 1 : screenType === "large" ? 1.1 : 1.05;
+              yPos = screenType === "mobile" ? -5 : -12;
+              scale = screenType === "mobile" ? 1.05 : screenType === "large" ? 1.15 : 1.1;
               opacity = 1;
               zIndex = 30;
+              rotateZ = 0;
               rotateY = 0;
             } else if (offset === 1) {
               // RIGHT 1
-              xPos = screenType === "mobile" ? 110 : screenType === "large" ? 280 : 210;
-              scale = screenType === "mobile" ? 0.82 : 0.92;
-              opacity = screenType === "mobile" ? 0.4 : 0.95;
-              rotateY = screenType === "mobile" ? -18 : -12;
+              xPos = screenType === "mobile" ? 100 : screenType === "large" ? 240 : 180;
+              yPos = screenType === "mobile" ? 15 : 25;
+              scale = screenType === "mobile" ? 0.84 : 0.92;
+              opacity = screenType === "mobile" ? 0.65 : 0.9;
+              rotateZ = 6;
+              rotateY = -12;
               zIndex = 20;
             } else if (offset === 2) {
               // RIGHT 2
-              xPos = screenType === "mobile" ? 190 : screenType === "large" ? 500 : 390;
-              scale = screenType === "mobile" ? 0.65 : 0.78;
-              opacity = screenType === "mobile" ? 0.15 : 0.5;
-              rotateY = screenType === "mobile" ? -28 : -25;
+              xPos = screenType === "mobile" ? 165 : screenType === "large" ? 430 : 330;
+              yPos = screenType === "mobile" ? 35 : 55;
+              scale = screenType === "mobile" ? 0.68 : 0.76;
+              opacity = screenType === "mobile" ? 0.25 : 0.55;
+              rotateZ = 12;
+              rotateY = -24;
               zIndex = 10;
             } else if (offset === total - 1) {
               // LEFT 1
-              xPos = screenType === "mobile" ? -110 : screenType === "large" ? -280 : -210;
-              scale = screenType === "mobile" ? 0.82 : 0.92;
-              opacity = screenType === "mobile" ? 0.4 : 0.95;
-              rotateY = screenType === "mobile" ? 18 : 12;
+              xPos = screenType === "mobile" ? -100 : screenType === "large" ? -240 : -180;
+              yPos = screenType === "mobile" ? 15 : 25;
+              scale = screenType === "mobile" ? 0.84 : 0.92;
+              opacity = screenType === "mobile" ? 0.65 : 0.9;
+              rotateZ = -6;
+              rotateY = 12;
               zIndex = 20;
             } else if (offset === total - 2) {
               // LEFT 2
-              xPos = screenType === "mobile" ? -190 : screenType === "large" ? -500 : -390;
-              scale = screenType === "mobile" ? 0.65 : 0.78;
-              opacity = screenType === "mobile" ? 0.15 : 0.5;
-              rotateY = screenType === "mobile" ? 28 : 25;
+              xPos = screenType === "mobile" ? -165 : screenType === "large" ? -430 : -330;
+              yPos = screenType === "mobile" ? 35 : 55;
+              scale = screenType === "mobile" ? 0.68 : 0.76;
+              opacity = screenType === "mobile" ? 0.25 : 0.55;
+              rotateZ = -12;
+              rotateY = 24;
               zIndex = 10;
             } else {
               xPos = 0;
+              yPos = 80;
               scale = 0.5;
               opacity = 0;
               zIndex = 0;
@@ -316,20 +399,45 @@ export default function VideoTestimonials() {
             return (
               <div
                 key={item.id}
-                onClick={() => setActiveIndex(index)}
                 style={{
-                  transform: `translateX(${xPos}px) scale(${scale}) rotateY(${rotateY}deg)`,
+                  transform: `translate3d(${xPos}px, ${yPos}px, 0px) scale(${scale}) rotateZ(${rotateZ}deg) rotateY(${rotateY}deg)`,
                   opacity: opacity,
                   zIndex: zIndex,
                 }}
-                className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] origin-bottom transform-gpu"
               >
-                <VideoCard item={item} isActive={offset === 0} />
+                <VideoCard
+                  item={item}
+                  isActive={offset === 0}
+                  onVideoClick={(src) => setSelectedMobileVideo(src)}
+                  onMakeActive={() => setActiveIndex(index)} 
+                />
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* MOBILE FULLSCREEN VIDEO MODAL */}
+      {selectedMobileVideo && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <button
+            onClick={() => setSelectedMobileVideo(null)}
+            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="relative w-full max-w-xs aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border border-purple-500/40">
+            <video
+              src={selectedMobileVideo}
+              autoPlay
+              controls
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
