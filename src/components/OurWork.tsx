@@ -206,10 +206,55 @@ function WorkCard({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isCenter = offset === 0;
+  const [isInView, setIsInView] = useState(false);
+
+  // Check if section/video is currently in viewport
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Control Play/Pause: Only play when in center AND in viewport
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isCenter && isInView) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay policy fallback
+        });
+      }
+    } else {
+      video.pause();
+    }
+  }, [isCenter, isInView]);
+
+  // Click / Tap Handler (Ensures playing on mobile devices)
+  const handleCardClick = () => {
+    onClick();
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  };
 
   // Sound Control on Mouse Hover
   const handleMouseEnter = () => {
-    if (videoRef.current) {
+    if (videoRef.current && isCenter) {
       videoRef.current.muted = false; // Audio ON on Hover
     }
   };
@@ -278,7 +323,7 @@ function WorkCard({
 
   return (
     <div
-      onClick={onClick}
+      onClick={handleCardClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform"
@@ -306,7 +351,6 @@ function WorkCard({
             <video
               ref={videoRef}
               src={item.video}
-              autoPlay
               loop
               muted
               playsInline
