@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from "react";
-import { Play, X } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -29,18 +29,50 @@ const testimonials: Testimonial[] = [
 function VideoCard({
   item,
   isActive,
-  onVideoClick,
-  onMakeActive, // Naya prop taake click hone par center ho jaye
+  onMakeActive,
 }: {
   item: Testimonial;
   isActive: boolean;
-  onVideoClick: (videoSrc: string) => void;
   onMakeActive: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Jab active status change ho to inactive videos ko pause aur reset kar do
+  useEffect(() => {
+    if (!isActive && videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = true;
+      setIsPlaying(false);
+    }
+  }, [isActive]);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      videoRef.current.muted = false;
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          // Fallback agar browser sound ke sath play allow na kare
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play();
+            setIsPlaying(true);
+          }
+        });
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
 
   const handleMouseEnter = () => {
-    if (window.innerWidth >= 768 && videoRef.current) {
+    // Desktop hover effect (optional preview)
+    if (window.innerWidth >= 768 && videoRef.current && !isPlaying) {
       videoRef.current.muted = false;
       videoRef.current.play().catch(() => {
         if (videoRef.current) {
@@ -52,7 +84,7 @@ function VideoCard({
   };
 
   const handleMouseLeave = () => {
-    if (window.innerWidth >= 768 && videoRef.current) {
+    if (window.innerWidth >= 768 && videoRef.current && !isPlaying) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
@@ -61,29 +93,15 @@ function VideoCard({
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // AGAR CENTER MEIN NAHI HAI, TOH PEHLE CENTER MEIN LAO
+
+    // 1. Clear center mein nahi hai toh pehle ise active/center banao
     if (!isActive) {
       onMakeActive();
       return;
     }
 
-    // AGAR CENTER MEIN HAI, TOH VIDEO PLAY/PAUSE KARO
-    if (window.innerWidth < 768) {
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
-      onVideoClick(item.videoSrc);
-    } else {
-      if (videoRef.current) {
-        if (videoRef.current.paused) {
-          videoRef.current.muted = false;
-          videoRef.current.play();
-        } else {
-          videoRef.current.pause();
-        }
-      }
-    }
+    // 2. Agar active hai to wahi cards par hi play/pause toggle karo
+    togglePlay();
   };
 
   return (
@@ -111,12 +129,8 @@ function VideoCard({
       {/* Glass overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play Icon Hint on Mobile/Hover */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 sm:group-hover:opacity-0 transition-opacity">
-        <div className="w-9 h-9 rounded-full bg-purple-600/80 backdrop-blur-md flex items-center justify-center text-white">
-          <Play className="w-4 h-4 fill-white ml-0.5" />
-        </div>
-      </div>
+      {/* Play/Pause Button Overlay */}
+     
     </div>
   );
 }
@@ -125,7 +139,6 @@ export default function VideoTestimonials() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [screenType, setScreenType] = useState<"mobile" | "desktop" | "large">("desktop");
-  const [selectedMobileVideo, setSelectedMobileVideo] = useState<string | null>(null);
 
   // Smooth Drag logic
   const [isDragging, setIsDragging] = useState(false);
@@ -218,13 +231,13 @@ export default function VideoTestimonials() {
 
   // 2. Auto Rotation Timer
   useEffect(() => {
-    if (isHovered || isDragging || selectedMobileVideo) return;
+    if (isHovered || isDragging) return;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % testimonials.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isHovered, isDragging, selectedMobileVideo]);
+  }, [isHovered, isDragging]);
 
   // 3. Stop videos on section leave
   useEffect(() => {
@@ -279,8 +292,7 @@ export default function VideoTestimonials() {
         } else {
           setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
         }
-        
-        // Timeout to prevent too rapid scrolling
+
         wheelTimeout.current = setTimeout(() => {
           wheelTimeout.current = null;
         }, 350);
@@ -296,7 +308,7 @@ export default function VideoTestimonials() {
       {/* Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[750px] 2xl:w-[1000px] h-[300px] sm:h-[450px] 2xl:h-[600px] bg-purple-600/15 blur-[100px] sm:blur-[160px] 2xl:blur-[200px] rounded-full pointer-events-none" />
 
-      {/* Heading (Spacing barha di gayi hai: mb-16 sm:mb-24 2xl:mb-32) */}
+      {/* Heading */}
       <div
         className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 mb-16 sm:mb-24 2xl:mb-32 px-4 ${cinzel.className}`}
       >
@@ -409,35 +421,13 @@ export default function VideoTestimonials() {
                 <VideoCard
                   item={item}
                   isActive={offset === 0}
-                  onVideoClick={(src) => setSelectedMobileVideo(src)}
-                  onMakeActive={() => setActiveIndex(index)} 
+                  onMakeActive={() => setActiveIndex(index)}
                 />
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* MOBILE FULLSCREEN VIDEO MODAL */}
-      {selectedMobileVideo && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <button
-            onClick={() => setSelectedMobileVideo(null)}
-            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div className="relative w-full max-w-xs aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border border-purple-500/40">
-            <video
-              src={selectedMobileVideo}
-              autoPlay
-              controls
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      )}
     </section>
   );
 }
