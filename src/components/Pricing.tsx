@@ -99,6 +99,14 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
     setRotateY(0);
   };
 
+  // Custom Geometric Clip Paths for Unique Shapes
+  const standardClipPath =
+    "polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))";
+  const popularClipPath =
+    "polygon(32px 0, 100% 0, 100% calc(100% - 32px), calc(100% - 32px) 100%, 0 100%, 0 32px)";
+
+  const currentClipPath = plan.isPopular ? popularClipPath : standardClipPath;
+
   return (
     <div
       onMouseMove={handleMouseMove}
@@ -106,91 +114,126 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       style={{
         transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
       }}
-      className={`pricing-card-inner group relative flex flex-col justify-between p-6 sm:p-7 rounded-3xl transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] shrink-0 shadow-2xl backdrop-blur-md lg:hover:scale-105 lg:hover:z-50 ${
-        plan.isPopular
-          ? "bg-[#140827]/95 border-2 border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.35)] z-20"
-          : "bg-[#0d0718]/90 border border-white/10 lg:hover:border-purple-500/60 z-10"
+      className={`pricing-card-inner group relative p-[1.5px] transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] shrink-0 lg:hover:scale-105 lg:hover:z-50 ${
+        plan.isPopular ? "z-20" : "z-10"
       }`}
     >
-      {/* Dynamic Spotlight Glow */}
+      {/* Outer Border Glow Wrapper with Custom Clip-Path */}
       <div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden lg:block"
+        className={`absolute inset-0 transition-all duration-500 ${
+          plan.isPopular
+            ? "bg-gradient-to-br from-purple-500 via-fuchsia-500 to-purple-800 shadow-[0_0_35px_rgba(168,85,247,0.4)]"
+            : "bg-gradient-to-br from-white/20 via-purple-500/20 to-white/5 group-hover:from-purple-500 group-hover:to-fuchsia-500"
+        }`}
         style={{
-          background: `radial-gradient(500px circle at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(168, 85, 247, 0.2), transparent 80%)`,
+          clipPath: currentClipPath,
         }}
       />
 
-      {/* Top Header Badge */}
-      <div className="flex items-center justify-between mb-4">
-        <span
-          className={`text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 rounded-full border ${
-            plan.isPopular
-              ? "bg-purple-600/30 border-purple-400 text-purple-200"
-              : "bg-white/5 border-white/10 text-gray-400"
-          }`}
-        >
-          {plan.badge}
-        </span>
-        {plan.isPopular && (
-          <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-        )}
-      </div>
+      {/* Main Card Content Layer */}
+      <div
+        className={`relative flex flex-col justify-between p-6 sm:p-7 h-full w-full backdrop-blur-xl ${
+          plan.isPopular ? "bg-[#120723]/95" : "bg-[#0a0512]/95"
+        }`}
+        style={{
+          clipPath: currentClipPath,
+        }}
+      >
+        {/* Dynamic Spotlight Glow */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden lg:block"
+          style={{
+            background: `radial-gradient(400px circle at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(168, 85, 247, 0.25), transparent 70%)`,
+          }}
+        />
 
-      {/* Title & Price */}
-      <div className="mb-4">
-        <h3 className={`text-lg sm:text-xl font-bold text-white mb-1 ${cinzel.className}`}>
-          {plan.title}
-        </h3>
-        
-        <div className="flex items-baseline gap-1 my-2">
-          <span className={`text-3xl sm:text-4xl font-black text-white ${cinzel.className}`}>
-            {plan.price}
+        {/* Top Decorative Tech Notch */}
+        <div className="absolute top-0 right-10 w-12 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
+
+        {/* Header Badge */}
+        <div className="flex items-center justify-between mb-4 z-10">
+          <span
+            className={`text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 border ${
+              plan.isPopular
+                ? "bg-purple-600/30 border-purple-400 text-purple-200"
+                : "bg-white/5 border-white/10 text-gray-400"
+            }`}
+            style={{
+              clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
+            }}
+          >
+            {plan.badge}
           </span>
-          <span className="text-xs text-gray-400 font-light">/ project</span>
+          {plan.isPopular && (
+            <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
+          )}
         </div>
 
-        <p className="text-xs text-gray-400 leading-relaxed font-light min-h-[36px]">
-          {plan.description}
-        </p>
+        {/* Title & Price */}
+        <div className="mb-4 z-10">
+          <h3 className={`text-lg sm:text-xl font-bold text-white mb-1 ${cinzel.className}`}>
+            {plan.title}
+          </h3>
+
+          <div className="flex items-baseline gap-1 my-2">
+            <span className={`text-3xl sm:text-4xl font-black text-white ${cinzel.className}`}>
+              {plan.price}
+            </span>
+            <span className="text-xs text-gray-400 font-light">/ project</span>
+          </div>
+
+          <p className="text-xs text-gray-400 leading-relaxed font-light min-h-[36px]">
+            {plan.description}
+          </p>
+        </div>
+
+        {/* Features Checklist */}
+        <div className="flex-1 mb-5 z-10">
+          <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-4" />
+          <ul className="space-y-2.5">
+            {plan.features.map((feature, idx) => (
+              <li
+                key={idx}
+                className="flex items-center gap-2 text-xs text-gray-300 font-light lg:group-hover:translate-x-1 transition-transform duration-300"
+              >
+                <div className="w-4 h-4 rounded-full bg-purple-950/80 border border-purple-500/50 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
+                  <Check className="w-2.5 h-2.5 text-purple-300 group-hover:text-white stroke-[3]" />
+                </div>
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2 mt-auto z-10">
+          <button
+            className="w-full py-2.5 px-4 bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 text-white font-bold text-[11px] uppercase tracking-wider transition-all duration-300 active:scale-95"
+            style={{
+              clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+            }}
+          >
+            Customize Package
+          </button>
+
+          <button
+            className={`w-full py-2.5 px-4 text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
+              plan.isPopular
+                ? "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
+                : "bg-white text-purple-950 hover:bg-gray-100"
+            }`}
+            style={{
+              clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)",
+            }}
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>Subscribe Now</span>
+          </button>
+        </div>
+
+        {/* Bottom Corner Accent Notch */}
+        <div className="absolute bottom-0 left-10 w-12 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
       </div>
-
-      {/* Features Checklist */}
-      <div className="flex-1 mb-5">
-        <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/30 via-white/10 to-transparent mb-4" />
-        <ul className="space-y-2.5">
-          {plan.features.map((feature, idx) => (
-            <li
-              key={idx}
-              className="flex items-center gap-2 text-xs text-gray-300 font-light lg:group-hover:translate-x-1 transition-transform duration-300"
-            >
-              <div className="w-4 h-4 rounded-full bg-purple-950/80 border border-purple-500/50 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
-                <Check className="w-2.5 h-2.5 text-purple-300 group-hover:text-white stroke-[3]" />
-              </div>
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col gap-2 mt-auto">
-        <button className="w-full py-2.5 px-4 rounded-full bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 text-white font-bold text-[11px] uppercase tracking-wider transition-all duration-300 active:scale-95">
-          Customize Package
-        </button>
-
-        <button
-          className={`w-full py-2.5 px-4 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
-            plan.isPopular
-              ? "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
-              : "bg-white text-purple-950 hover:bg-gray-100"
-          }`}
-        >
-          <Zap className="w-3.5 h-3.5 fill-current" />
-          <span>Subscribe Now</span>
-        </button>
-      </div>
-
-      <div className="absolute bottom-0 inset-x-8 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </div>
   );
 }
@@ -252,8 +295,8 @@ export default function PricingSection() {
         mainTl.to(
           cards,
           {
-            y: (i) => (i === 1 ? -15 : 10), // Middle card slightly higher
-            rotate: (i) => (i === 0 ? -3 : i === 2 ? 3 : 0), // Slight tilt on desktop
+            y: (i) => (i === 1 ? -15 : 10),
+            rotate: (i) => (i === 0 ? -3 : i === 2 ? 3 : 0),
             opacity: 1,
             stagger: 0.15,
             duration: 0.8,
@@ -278,7 +321,6 @@ export default function PricingSection() {
           },
         });
 
-        // Straight cards reveal without rotation
         gsap.fromTo(
           cards,
           { opacity: 0, y: 30, rotate: 0 },
