@@ -2,7 +2,6 @@
 
 import React, {
   memo,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -13,7 +12,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -45,19 +44,17 @@ function getCardStyle(offset: number): React.CSSProperties {
 
   if (abs > VISIBLE_SIDES) {
     return {
-      transform: `translate3d(${dir * 300}%, 120px, 0) scale(0.65)`,
+      transform: `translate3d(${dir * 320}%, 140px, 0) scale(0.65)`,
       opacity: 0,
       pointerEvents: "none",
       zIndex: 0,
     };
   }
 
-  // Increased gap between cards (105px offset factor)
-  const x = offset * 105;
-  const y = abs === 0 ? 0 : 35 + abs * 20;
+  // Slightly increased offset for wider cards on desktop
+  const x = offset * 112;
+  const y = abs === 0 ? 0 : 35 + abs * 24;
   const scale = abs === 0 ? 1.05 : 1 - abs * 0.06;
-  
-  // Angle facing towards center card
   const rotate = abs === 0 ? 0 : dir * -8;
 
   return {
@@ -73,21 +70,45 @@ function getCardStyle(offset: number): React.CSSProperties {
 
 export default function HeroSection() {
   const mainRef = useRef<HTMLDivElement>(null);
-  const subtitleRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const descRef = useRef<HTMLParagraphElement>(null);
   const btnRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLDivElement>(null);
+  
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const centerCardRef = useRef<HTMLDivElement>(null);
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const centerIndex = Math.floor(heroCards.length / 2);
+
+  const scrollToCenterCard = () => {
+    const container = mobileScrollRef.current;
+    const centerCard = centerCardRef.current;
+
+    if (container && centerCard) {
+      const scrollPos =
+        centerCard.offsetLeft - container.clientWidth / 2 + centerCard.clientWidth / 2;
+      container.scrollTo({ left: scrollPos, behavior: 'instant' });
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollToCenterCard();
+    }, 50);
+
+    window.addEventListener("resize", scrollToCenterCard);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", scrollToCenterCard);
+    };
+  }, []);
 
   useGSAP(
     () => {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const textTargets = [
-        subtitleRef.current,
         titleRef.current,
         descRef.current,
         btnRef.current,
@@ -96,10 +117,16 @@ export default function HeroSection() {
       if (reduce) {
         if (textTargets.length > 0) gsap.set(textTargets, { opacity: 1, y: 0, scale: 1 });
         if (deckRef.current) gsap.set(deckRef.current, { opacity: 1, y: 0, scale: 1 });
+        scrollToCenterCard();
         return;
       }
 
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+      const tl = gsap.timeline({
+        defaults: { ease: "power3.out" },
+        onComplete: () => {
+          scrollToCenterCard();
+        }
+      });
 
       if (textTargets.length > 0) {
         gsap.set(textTargets, { opacity: 0, y: 30 });
@@ -148,53 +175,78 @@ export default function HeroSection() {
   return (
     <main
       ref={mainRef}
-      className="relative w-full min-h-screen pt-36 sm:pt-44 md:pt-48 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-16 selection:bg-purple-500/30"
+      className="relative w-full min-h-screen pt-28 sm:pt-36 md:pt-40 lg:pt-44 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-16 2xl:pb-24 selection:bg-purple-500/30"
     >
-      {/* Background Ambient Cyber Glows */}
+      {/* Background Ambient Glows scaled up for big displays */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[-5%] h-[500px] w-[900px] -translate-x-1/2 rounded-full opacity-20 blur-[150px]"
+        className="pointer-events-none absolute left-1/2 top-[-5%] h-[400px] sm:h-[500px] 2xl:h-[700px] w-[90vw] max-w-[1400px] -translate-x-1/2 rounded-full opacity-20 blur-[120px] sm:blur-[160px]"
         style={{
           background: "radial-gradient(circle, rgba(168,85,247,0.8) 0%, rgba(6,3,10,0) 70%)",
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[35%] h-[400px] w-[600px] -translate-x-1/2 rounded-full opacity-15 blur-[120px]"
+        className="pointer-events-none absolute left-1/2 top-[35%] h-[300px] sm:h-[400px] 2xl:h-[600px] w-[80vw] max-w-[1100px] -translate-x-1/2 rounded-full opacity-15 blur-[100px] sm:blur-[140px]"
         style={{
           background: "radial-gradient(circle, rgba(192,38,211,0.6) 0%, rgba(6,3,10,0) 70%)",
         }}
       />
 
       {/* Main Content Area */}
-      <div className="relative z-20 flex w-full max-w-5xl flex-col items-center justify-center text-center px-4 mb-12 sm:mb-16">
-        <h1
-          ref={titleRef}
-          className={`text-2xl sm:text-4xl lg:text-6xl font-black tracking-wide leading-tight uppercase whitespace-nowrap ${cinzel.className}`}
-        >
-          WE CREATE VIRAL VISUALS
-        </h1>
+<div className="relative z-20 flex w-full max-w-7xl 2xl:max-w-[1600px] flex-col items-center justify-center text-center px-3 sm:px-6 mb-8 sm:mb-12 lg:mb-16">
+  
+  {/* Smart Single Line Auto-Shrinking Heading */}
+  <div className="w-full max-w-full overflow-hidden flex justify-center items-center px-1">
+    <h1
+      ref={titleRef}
+      className={`font-black tracking-normal sm:tracking-wider uppercase whitespace-nowrap text-[4.8vw] sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl ${cinzel.className}`}
+      style={{
+        fontSize: "clamp(0.95rem, 4.6vw, 3.75rem)"
+      }}
+    >
+      Elevate Your Brand's Videos
+    </h1>
+  </div>
 
-        <p
-          ref={descRef}
-          className="mt-5 sm:mt-6 max-w-2xl text-xs sm:text-sm leading-relaxed text-gray-300/80 font-light"
-        >
-          High-impact video editing, seamless motion graphics, and sound design crafted for creators and brands. We turn your raw ideas into captivating visual stories that drive real audience engagement.
-        </p>
+  {/* Description */}
+  <p
+    ref={descRef}
+    className="mt-3 sm:mt-5 lg:mt-6 max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl text-[11px] sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-300/85 font-light px-2"
+  >
+    High-impact video editing, motion graphics, and sound design. We turn your raw footage into captivating visual stories that drive real engagement.
+  </p>
 
-        <div ref={btnRef} className="mt-8 relative group/btn">
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-50 blur-md group-hover/btn:opacity-90 transition-opacity duration-300" />
-          <Link
-            href="/work"
-            className="relative inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
-          >
-            <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
-            <span className="relative z-10">Explore Our Work</span>
-            <ArrowRight className="relative z-10 w-4 h-4 text-purple-300 transition-transform duration-300 group-hover/btn:translate-x-1" />
-          </Link>
-        </div>
-      </div>
+  {/* Action Buttons */}
+  <div
+    ref={btnRef}
+    className="mt-5 sm:mt-8 lg:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 lg:gap-5 w-full sm:w-auto px-4 sm:px-0"
+  >
+    {/* Book a Call Button */}
+    <Link
+      href="#book-call"
+      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25"
+    >
+      <span>Book a Call</span>
+      <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
+    </Link>
 
+    {/* WhatsApp Glow Button */}
+    <div className="relative group/btn w-full sm:w-auto">
+      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
+      <Link
+        href="/"
+        target="_blank"
+        className="relative w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 rounded-full text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
+      >
+        <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
+        <span className="relative z-10">WhatsApp Us</span>
+        <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+      </Link>
+    </div>
+  </div>
+
+</div>
       {/* Video Carousel Deck */}
       <section
         ref={deckRef}
@@ -202,8 +254,8 @@ export default function HeroSection() {
         aria-label="Cards Showcase"
         className="relative z-10 w-full outline-none"
       >
-        {/* DESKTOP VIEW: Fixed 3D Deck */}
-        <div className="hidden md:flex relative h-[460px] w-full items-end justify-center">
+        {/* DESKTOP VIEW (Scaled up for large screens) */}
+        <div className="hidden lg:flex relative h-[480px] xl:h-[520px] 2xl:h-[620px] w-full items-end justify-center">
           {cards.map(({ item, index, offset }) => (
             <HeroCard
               key={item.id}
@@ -218,16 +270,23 @@ export default function HeroSection() {
           ))}
         </div>
 
-        {/* MOBILE VIEW: Horizontal Scroll List */}
-        <div className="flex md:hidden w-full overflow-x-auto gap-4 px-6 pb-6 scrollbar-none snap-x snap-mandatory">
-          {cards.map(({ item, index }) => (
-            <div key={item.id} className="snap-center shrink-0">
+        {/* MOBILE & TABLET VIEW */}
+        <div
+          ref={mobileScrollRef}
+          className="flex lg:hidden w-full overflow-x-auto gap-4 sm:gap-6 py-4 scrollbar-none snap-x snap-mandatory items-center justify-start [scroll-padding-left:calc(50vw-105px)] sm:[scroll-padding-left:calc(50vw-130px)] px-[calc(50vw-105px)] sm:px-[calc(50vw-130px)]"
+        >
+          {cards.map(({ item, index, offset }) => (
+            <div
+              key={item.id}
+              ref={offset === 0 ? centerCardRef : null}
+              className="snap-center shrink-0"
+            >
               <HeroCard
                 item={item}
                 index={index}
-                offset={0}
+                offset={offset}
                 isPlaying={hoveredIndex === index}
-                isCenter={index === centerIndex}
+                isCenter={offset === 0}
                 onHover={setHoveredIndex}
                 isMobile={true}
               />
@@ -278,7 +337,7 @@ const HeroCard = memo(function HeroCard({
       }
     } else {
       video.pause();
-      video.currentTime = 0; // Reset video frame when unhovered
+      video.currentTime = 0;
       video.muted = true;
     }
   }, [isPlaying]);
@@ -296,18 +355,20 @@ const HeroCard = memo(function HeroCard({
       aria-current={isCenter}
       tabIndex={isMobile || isVisible ? 0 : -1}
       className={`${
-        isMobile ? "relative aspect-[9/14] w-[220px]" : "absolute aspect-[9/14] w-[190px] sm:w-[240px] md:w-[280px]"
+        isMobile
+          ? "relative aspect-[9/14] w-[210px] sm:w-[260px]"
+          : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
       } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none`}
       style={style}
     >
       <div
-        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] transition-all duration-500 ${
+        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${
           isCenter
-            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] shadow-[0_0_35px_rgba(168,85,247,0.45)]"
+            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_35px_rgba(168,85,247,0.45)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)]"
             : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px]"
         }`}
       >
-        <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px]">
+        <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px]">
           <video
             ref={videoRef}
             src={item.video}

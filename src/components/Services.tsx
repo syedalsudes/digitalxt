@@ -1,344 +1,391 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback, memo } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { 
+  Check, 
+  Zap, 
+  ArrowUpRight, 
+  Video, 
+  TabletSmartphone, 
+  House,
+  Play,
+  Pause
+} from "lucide-react";
 import { Cinzel } from "next/font/google";
-import { ArrowUpRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Image from "next/image";
+import Lenis from "lenis";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
-  weight: ["700"],
-  display: "swap", // Font swap optimization
+  weight: ["700", "900"],
 });
 
-// Memoized Vector Icons for performance
-const RealEstateIcon = memo(() => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 21h18" />
-    <path d="M5 21V7l7-4 7 4v14" />
-    <path d="M9 10h2M13 10h2M9 14h2M13 14h2" />
-    <path d="M10 21v-4h4v4" />
-  </svg>
-));
-RealEstateIcon.displayName = "RealEstateIcon";
+interface ServiceData {
+  id: string;
+  badge: string;
+  title: string;
+  icon: React.ElementType;
+  brief: string;
+  points: string[];
+  portfolioLabel: string;
+  portfolioHref: string;
+  pricingHref: string;
+  videoUrl: string;
+}
 
-const SaasAnimationIcon = memo(() => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" strokeOpacity="0.4" />
-  </svg>
-));
-SaasAnimationIcon.displayName = "SaasAnimationIcon";
-
-const CustomVideoEditingIcon = memo(() => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="3" />
-    <path d="M7 4v16M17 4v16" strokeOpacity="0.4" />
-    <polygon points="10 9 15 12 10 15 10 9" fill="currentColor" />
-  </svg>
-));
-CustomVideoEditingIcon.displayName = "CustomVideoEditingIcon";
-
-const services = [
+const servicesList: ServiceData[] = [
   {
-    id: 1,
-    number: "01",
-    tag: "ARCHITECTURAL",
+    id: "real-estate",
+    badge: "PREMIUM SHOWCASE",
     title: "Real Estate Media",
-    description: "Cinematic architectural walkthroughs, speed ramps, drone footage color grading, and luxury property showcases.",
-    icon: RealEstateIcon,
-    image: "/services2.png",
-    link: "/services/real-estate",
+    icon: House,
+    brief: "Cinematic real estate property tours engineered to captivate buyers and close high-ticket deals faster.",
+    points: [
+      "Premium Texturing with 4 to 5 Distinct Variations",
+      "30 - 60 Seconds Max High-Impact Editing",
+      "Dynamic Speed Ramping & Seamless Transitions",
+      "1 - 2 AI Virtual Staging Enhancements"
+    ],
+    portfolioLabel: "Our Work",
+    portfolioHref: "/services/real-estate",
+    pricingHref: "/services/real-estate#pricing",
+    videoUrl: "/videos/ourwork/workvid2.mp4",
   },
   {
-    id: 2,
-    number: "02",
-    tag: "MOTION GRAPHICS",
-    title: "SaaS Launch Videos",
-    description: "High-converting product demos, sleek 2D/3D motion graphics, UI animations, and explainer videos for SaaS launches.",
-    icon: SaasAnimationIcon,
-    image: "/services3.png",
-    link: "/services/saas-videos",
+    id: "saas-launch",
+    badge: "HIGH CONVERTING",
+    title: "SaaS / Launch Videos",
+    icon: Video,
+    brief: "High-impact SaaS product walkthroughs and launch videos designed to drive viral reach and increase conversions.",
+    points: [
+      "Scripting, Professional Voiceover (VO), Storyboard & UI Animations",
+      "Guaranteed 2-3 Week Fast Turnaround Delivery"
+    ],
+    portfolioLabel: "SaaS Portfolio",
+    portfolioHref: "/services/saas-videos",
+    pricingHref: "/services/saas-videos#pricing",
+    videoUrl: "/videos/ourwork/workvid1.mp4",
   },
   {
-    id: 3,
-    number: "03",
-    tag: "POST PRODUCTION",
-    title: "Custom Video Editing",
-    description: "Tailored high-retention cuts, custom sound design, visual effects, and narrative pacing built specifically for your brand.",
-    icon: CustomVideoEditingIcon,
-    image: "/services3.png",
-    link: "/services/short-form",
+    id: "custom-editing",
+    badge: "ALL-IN-ONE CREATIVE",
+    title: "Custom Editing",
+    icon: TabletSmartphone,
+    brief: "Tailored video post-production catering to creators, businesses, podcasts, and corporate brands.",
+    points: [
+      "Short Form, Long Form & Corporate Videos",
+      "Podcasts, YouTube Content & Talking Head Edits",
+      "High-End Wedding & Event Highlights"
+    ],
+    portfolioLabel: "Our Portfolio",
+    portfolioHref: "/services/short-form",
+    pricingHref: "/services/short-form#pricing",
+    videoUrl: "/videos/ourwork/workvid3.mp4",
   },
 ];
 
+function ServiceCard({ service, index }: { service: ServiceData; index: number }) {
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
+  const [isPlaying, setIsPlaying] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const ServiceIcon = service.icon;
+  const isMiddleCard = index === 1;
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (window.innerWidth < 1024) return;
+
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotX = ((y - centerY) / centerY) * -3;
+    const rotY = ((x - centerX) / centerX) * 3;
+
+    setRotateX(rotX);
+    setRotateY(rotY);
+    setSpotlightPos({
+      x: (x / rect.width) * 100,
+      y: (y / rect.height) * 100,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+  };
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const clipPathShape = "polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px))";
+  const innerClipPath = "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))";
+
+  return (
+    <div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+      }}
+      className="group relative p-[1.5px] transition-transform duration-300 ease-out w-full max-w-6xl mx-auto"
+    >
+      {/* Outer Glow Border */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-purple-500/30 via-fuchsia-500/20 to-purple-900/40 group-hover:from-purple-500 group-hover:via-fuchsia-500 group-hover:to-purple-600 transition-all duration-500 shadow-[0_0_35px_rgba(168,85,247,0.15)]"
+        style={{ clipPath: clipPathShape }}
+      />
+
+      {/* Main Glass Card Container */}
+      <div
+        className={`relative flex flex-col lg:flex-row justify-between items-center p-6 sm:p-8 lg:p-10 h-full w-full bg-[#0a0512]/95 backdrop-blur-2xl gap-6 sm:gap-8 lg:gap-10 ${
+          isMiddleCard ? "lg:flex-row-reverse" : ""
+        }`}
+        style={{ clipPath: clipPathShape }}
+      >
+        {/* Spotlight Effect */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none hidden lg:block"
+          style={{
+            background: `radial-gradient(600px circle at ${spotlightPos.x}% ${spotlightPos.y}%, rgba(168, 85, 247, 0.18), transparent 70%)`,
+          }}
+        />
+
+        {/* Top Accent Line */}
+        <div className="absolute top-0 right-12 sm:right-16 w-16 sm:w-20 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
+
+        {/* LEFT COLUMN: Details & Checklist */}
+        <div className="flex-1 flex flex-col justify-between z-10 w-full space-y-4">
+          <div>
+            {/* Badge */}
+            <div className="flex items-center gap-3 mb-3">
+              <span
+                className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase px-3 py-1 bg-purple-600/30 border border-purple-400/60 text-purple-200"
+                style={{
+                  clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
+                }}
+              >
+                {service.badge}
+              </span>
+            </div>
+
+            {/* Title with Icon */}
+            <div className="flex items-center gap-3 sm:gap-4 mb-3">
+              <div className="p-2.5 sm:p-3 bg-purple-950/80 border border-purple-500/50 text-purple-300 rounded-xl sm:rounded-2xl group-hover:bg-purple-600 group-hover:border-purple-400 group-hover:text-white transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <ServiceIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+              </div>
+              
+              <h3 className={`text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-wide uppercase ${cinzel.className}`}>
+                {service.title}
+              </h3>
+            </div>
+
+            {/* Brief Description */}
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light max-w-2xl mb-4">
+              {service.brief}
+            </p>
+
+            <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-4" />
+
+            {/* Feature Points */}
+            <ul className="space-y-2.5 mb-6">
+              {service.points.map((point, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-light group-hover:translate-x-1 transition-transform duration-300"
+                >
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-950/80 border border-purple-500/60 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
+                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-300 group-hover:text-white stroke-[3]" />
+                  </div>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full pt-4 border-t border-white/10">
+            <a
+              href={service.portfolioHref}
+              className="flex-1 py-3 px-4 bg-white text-purple-950 font-bold text-xs uppercase tracking-wider transition-all duration-300 hover:bg-purple-100 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+              style={{
+                clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)",
+              }}
+            >
+              <span>{service.portfolioLabel}</span>
+              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+            </a>
+
+            <a
+              href={service.pricingHref}
+              className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50 active:scale-95 flex items-center justify-center gap-2"
+              style={{
+                clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+              }}
+            >
+              <Zap className="w-4 h-4 fill-current" />
+              <span>Pricing / Packages</span>
+            </a>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Video Box */}
+        <div className="w-full lg:w-[420px] xl:w-[460px] flex flex-col justify-center items-center z-10 shrink-0">
+          <div 
+            className="relative w-full aspect-[16/9] bg-black/80 border border-purple-500/40 overflow-hidden group/video shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-xl"
+            style={{ clipPath: innerClipPath }}
+          >
+            <video
+              ref={videoRef}
+              src={service.videoUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
+            />
+
+            {/* Video Overlay Controls */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-0 group-hover/video:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <button
+                onClick={togglePlay}
+                className="p-3.5 bg-purple-600/80 hover:bg-purple-500 text-white rounded-full backdrop-blur-md transition-all duration-300 transform scale-90 hover:scale-105 border border-purple-300/40 shadow-lg"
+                aria-label={isPlaying ? "Pause Video" : "Play Video"}
+              >
+                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
+              </button>
+            </div>
+
+            {/* Preview Tag */}
+            <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-purple-500/40 text-[10px] font-mono tracking-widest text-purple-300 uppercase flex items-center gap-1.5 rounded-md">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              PREVIEW
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Accent Line */}
+        <div className="absolute bottom-0 left-12 sm:left-16 w-16 sm:w-20 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
+      </div>
+    </div>
+  );
+}
+
 export default function ServicesSection() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [hasEntered, setHasEntered] = useState(false);
-  const [screenType, setScreenType] = useState<"mobile" | "desktop" | "large">("desktop");
-
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const deckWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Optimized Debounce Resize Listener
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    const checkScreen = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        const width = window.innerWidth;
-        if (width < 640) setScreenType("mobile");
-        else if (width >= 1440) setScreenType("large");
-        else setScreenType("desktop");
-      }, 150);
-    };
-
-    checkScreen();
-    window.addEventListener("resize", checkScreen);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener("resize", checkScreen);
-    };
-  }, []);
-
-  // GSAP Entrance Optimization
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis.raf(time * 1000);
+    });
+    gsap.ticker.lagSmoothing(0);
+
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%",
-          once: true, // Only trigger once to avoid unnecessary re-calculations
-          onEnter: () => setHasEntered(true),
-        },
-      });
-
-      tl.fromTo(
+      // Header Animation
+      gsap.fromTo(
         headerRef.current,
-        { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }
-      ).fromTo(
-        deckWrapperRef.current,
-        { opacity: 0, y: 80, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power2.out" },
-        "-=0.3"
+        { opacity: 0, y: -30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+          },
+        }
       );
-    }, sectionRef);
 
-    return () => ctx.revert();
+      // Cards Reveal Animation
+      servicesList.forEach((service) => {
+        gsap.fromTo(
+          `#section-${service.id}`,
+          { opacity: 0, y: 40 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: `#section-${service.id}`,
+              start: "top 85%",
+              once: true,
+            },
+          }
+        );
+      });
+    }, containerRef);
+
+    return () => {
+      ctx.revert();
+      lenis.destroy();
+    };
   }, []);
 
-  // Auto Carousel Loop
-  useEffect(() => {
-    if (isHovered || !hasEntered) return;
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % services.length);
-    }, 4500);
-
-    return () => clearInterval(interval);
-  }, [isHovered, hasEntered]);
-
-  const handleNext = useCallback(() => setActiveIndex((prev) => (prev + 1) % services.length), []);
-  const handlePrev = useCallback(() => setActiveIndex((prev) => (prev - 1 + services.length) % services.length), []);
-
   return (
-    <section
-      ref={sectionRef}
-      id="services"
-      className="relative w-full min-h-[100dvh] bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-24 2xl:py-32 px-4 md:px-12 2xl:px-20 overflow-hidden selection:bg-purple-500/30"
-    >
-      {/* Optimized Background Glow: Removed heavy blur filters */}
-      <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] 2xl:w-[800px] h-[300px] sm:h-[400px] 2xl:h-[500px] rounded-full pointer-events-none opacity-40"
-        style={{
-          background: "radial-gradient(circle, rgba(147,51,234,0.3) 0%, rgba(6,3,10,0) 70%)"
-        }}
-      />
-
-      {/* Header */}
-      <div ref={headerRef} className={`text-center z-10 mb-10 sm:mb-16 2xl:mb-24 ${cinzel.className}`}>
-        <p className="text-[10px] sm:text-xs 2xl:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2 sm:mb-3 font-semibold">
-          Services Portfolio
+    <div ref={containerRef} className="w-full bg-[#06030a] text-white overflow-hidden selection:bg-purple-600 selection:text-white py-12 sm:py-16 md:py-24">
+      
+      {/* MAIN TOP HEADER (Exact Matched Style) */}
+      <div
+        ref={headerRef}
+        className={`z-10 text-center max-w-4xl mx-auto mb-8 sm:mb-12 md:mb-16 px-4 ${cinzel.className}`}
+      >
+        <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-1.5 sm:mb-2">
+          TAILORED CREATIVE SOLUTIONS
         </p>
-        <h2 className="text-3xl sm:text-6xl lg:text-7xl 2xl:text-8xl font-black uppercase tracking-wider bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
-          What We Do
+        <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
+          OUR SERVICES
         </h2>
       </div>
 
-      {/* Wrapper */}
-      <div ref={deckWrapperRef} className="w-full max-w-5xl 2xl:max-w-7xl flex flex-col items-center justify-center z-10">
-        <div
-          className="relative w-full h-[380px] sm:h-[460px] 2xl:h-[540px] flex items-center justify-center touch-pan-x"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+      {servicesList.map((service, index) => (
+        <section
+          key={service.id}
+          id={`section-${service.id}`}
+          className="relative w-full flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
         >
-          {services.map((service, index) => {
-            const offset = (index - activeIndex + services.length) % services.length;
+          {/* Ambient Lighting Background */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] lg:w-[800px] h-[250px] sm:h-[400px] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-            let xTransform = "0%";
-            let yOffset = 0;
-            let scale = 1;
-            let opacity = 1;
-            let zIndex = 30;
+          {/* Counter Label Header */}
+          <div className={`z-10 text-center max-w-4xl mx-auto flex flex-col items-center mb-4 sm:mb-6 ${cinzel.className}`}>
+            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-300/70">
+              0{index + 1} / SERVICE SPECIFICATION
+            </p>
+          </div>
 
-            if (offset === 0) {
-              xTransform = "0%";
-              yOffset = screenType === "mobile" ? -8 : screenType === "large" ? -20 : -15;
-              scale = screenType === "mobile" ? 1 : screenType === "large" ? 1.05 : 1.02;
-              opacity = 1;
-              zIndex = 30;
-            } else if (offset === 1) {
-              xTransform = screenType === "mobile" ? "55%" : screenType === "large" ? "100%" : "105%";
-              yOffset = screenType === "mobile" ? 10 : 20;
-              scale = screenType === "mobile" ? 0.8 : 0.88;
-              opacity = screenType === "mobile" ? 0.35 : 0.6;
-              zIndex = 10;
-            } else if (offset === 2) {
-              xTransform = screenType === "mobile" ? "-55%" : screenType === "large" ? "-100%" : "-105%";
-              yOffset = screenType === "mobile" ? 10 : 20;
-              scale = screenType === "mobile" ? 0.8 : 0.88;
-              opacity = screenType === "mobile" ? 0.35 : 0.6;
-              zIndex = 10;
-            }
-
-            const IconComponent = service.icon;
-            const isCurrentActive = offset === 0;
-
-            return (
-              <motion.div
-                key={service.id}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.1}
-                onDragEnd={(_, info) => {
-                  if (info.offset.x < -35) handleNext();
-                  if (info.offset.x > 35) handlePrev();
-                }}
-                animate={{
-                  x: xTransform,
-                  y: yOffset,
-                  scale: scale,
-                  opacity: opacity,
-                  zIndex: zIndex,
-                }}
-                transition={{
-                  duration: 0.35,
-                  ease: "easeOut",
-                }}
-                style={{
-                  willChange: "transform, opacity",
-                  WebkitFontSmoothing: "antialiased",
-                }}
-                className={`absolute w-[270px] xs:w-[290px] sm:w-[360px] 2xl:w-[460px] h-[350px] sm:h-[410px] 2xl:h-[500px] rounded-2xl sm:rounded-3xl 2xl:rounded-[32px] p-6 sm:p-8 2xl:p-12 flex flex-col justify-between cursor-grab active:cursor-grabbing select-none overflow-hidden ${
-                  isCurrentActive
-                    ? "border border-purple-500/50 bg-[#0d0718]/90 shadow-2xl"
-                    : "border border-purple-500/20 bg-[#06030a]/80 shadow-lg"
-                }`}
-                onClick={() => {
-                  if (!isCurrentActive) setActiveIndex(index);
-                }}
-              >
-                {/* Background Image Container */}
-                <div className="absolute inset-0 z-0">
-                  <Image
-                    src={service.image}
-                    alt={service.title}
-                    fill
-                    sizes="(max-width: 640px) 290px, (max-width: 1440px) 360px, 460px"
-                    quality={75}
-                    loading={isCurrentActive ? "eager" : "lazy"}
-                    decoding="async"
-                    className="object-cover opacity-60"
-                  />
-                </div>
-
-                {/* Card Top */}
-                <div className="relative z-10 flex items-center justify-between">
-                  <div
-                    className={`w-10 h-10 sm:w-12 sm:h-12 2xl:w-16 2xl:h-16 rounded-xl sm:rounded-2xl 2xl:rounded-3xl flex items-center justify-center border transition-colors ${
-                      isCurrentActive
-                        ? "bg-purple-950/80 border-purple-400/50 text-purple-300"
-                        : "bg-black/60 border-purple-500/20 text-neutral-300"
-                    }`}
-                  >
-                    <IconComponent />
-                  </div>
-
-                  <span className="text-[10px] sm:text-[11px] 2xl:text-sm font-mono tracking-widest text-purple-300/80 font-bold">
-                    {service.number}
-                  </span>
-                </div>
-
-                {/* Card Body */}
-                <div className="relative z-10 space-y-2 sm:space-y-3 2xl:space-y-4 my-auto">
-                  <span
-                    className={`text-[9px] sm:text-[10px] 2xl:text-xs font-bold tracking-[0.2em] uppercase ${
-                      isCurrentActive ? "text-purple-300" : "text-purple-400/80"
-                    }`}
-                  >
-                    {service.tag}
-                  </span>
-                  <h3 className={`text-xl sm:text-2xl 2xl:text-3xl font-bold uppercase tracking-wide text-white ${cinzel.className}`}>
-                    {service.title}
-                  </h3>
-                  <p className="text-neutral-200 text-[11px] sm:text-sm 2xl:text-base leading-relaxed font-normal line-clamp-3 sm:line-clamp-none">
-                    {service.description}
-                  </p>
-                </div>
-
-                {/* Card Bottom */}
-                <div className="relative z-10 pt-3 sm:pt-4 2xl:pt-6 border-t border-purple-500/30 flex items-center justify-between">
-                  <a
-                    href={service.link}
-                    onClick={(e) => {
-                      if (!isCurrentActive) {
-                        e.preventDefault();
-                        setActiveIndex(index);
-                      }
-                    }}
-                    className={`relative inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-[10px] sm:text-[11px] 2xl:text-xs font-bold uppercase tracking-wider text-white transition-transform active:scale-95 border border-purple-400/40 ${
-                      isCurrentActive ? "bg-[#120824]" : "bg-black/70"
-                    }`}
-                  >
-                    <span>View Detail</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-300" />
-                  </a>
-
-                  {/* Indicator Dot */}
-                  <div
-                    className={`w-1.5 h-1.5 2xl:w-2 2xl:h-2 rounded-full ${
-                      isCurrentActive ? "bg-purple-400" : "bg-purple-500/40"
-                    }`}
-                  />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Indicators */}
-        <div className="flex items-center gap-2 mt-8 sm:mt-12 2xl:mt-16 z-10">
-          {services.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActiveIndex(idx)}
-              className={`h-1.5 2xl:h-2 rounded-full transition-all duration-300 ${
-                activeIndex === idx
-                  ? "w-7 sm:w-8 2xl:w-12 bg-gradient-to-r from-purple-500 to-fuchsia-500"
-                  : "w-1.5 2xl:w-2 bg-purple-950/50 border border-purple-500/20"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-    </section>
+          {/* Interactive Card */}
+          <div className="w-full z-10 flex justify-center">
+            <ServiceCard service={service} index={index} />
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }
