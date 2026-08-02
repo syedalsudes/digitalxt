@@ -143,7 +143,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
       style={{
         transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
       }}
-      className="group relative p-[1.5px] transition-transform duration-300 ease-out w-full max-w-6xl mx-auto"
+      className="group relative p-[1.5px] transition-transform duration-300 ease-out w-full max-w-7xl 2xl:max-w-[1600px] mx-auto"
     >
       {/* Outer Glow Border */}
       <div
@@ -153,7 +153,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
 
       {/* Main Glass Card Container */}
       <div
-        className={`relative flex flex-col lg:flex-row justify-between items-center p-6 sm:p-8 lg:p-10 h-full w-full bg-[#0a0512]/95 backdrop-blur-2xl gap-6 sm:gap-8 lg:gap-10 ${
+        className={`relative flex flex-col lg:flex-row justify-between items-stretch p-6 sm:p-8 lg:p-12 2xl:p-16 h-full w-full bg-[#0a0512]/95 backdrop-blur-2xl gap-8 lg:gap-12 2xl:gap-16 ${
           isMiddleCard ? "lg:flex-row-reverse" : ""
         }`}
         style={{ clipPath: clipPathShape }}
@@ -167,15 +167,15 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
         />
 
         {/* Top Accent Line */}
-        <div className="absolute top-0 right-12 sm:right-16 w-16 sm:w-20 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
+        <div className="absolute top-0 right-12 sm:right-16 w-16 sm:w-24 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
 
         {/* LEFT COLUMN: Details & Checklist */}
-        <div className="flex-1 flex flex-col justify-between z-10 w-full space-y-4">
+        <div className="flex-1 flex flex-col justify-between z-10 w-full space-y-6">
           <div>
             {/* Badge */}
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-4">
               <span
-                className="text-[10px] sm:text-xs font-bold tracking-[0.25em] uppercase px-3 py-1 bg-purple-600/30 border border-purple-400/60 text-purple-200"
+                className="text-[10px] sm:text-xs 2xl:text-sm font-bold tracking-[0.25em] uppercase px-3 py-1.5 bg-purple-600/30 border border-purple-400/60 text-purple-200"
                 style={{
                   clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))",
                 }}
@@ -185,32 +185,32 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
             </div>
 
             {/* Title with Icon */}
-            <div className="flex items-center gap-3 sm:gap-4 mb-3">
-              <div className="p-2.5 sm:p-3 bg-purple-950/80 border border-purple-500/50 text-purple-300 rounded-xl sm:rounded-2xl group-hover:bg-purple-600 group-hover:border-purple-400 group-hover:text-white transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
-                <ServiceIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+            <div className="flex items-center gap-3 sm:gap-5 mb-4">
+              <div className="p-3 sm:p-4 bg-purple-950/80 border border-purple-500/50 text-purple-300 rounded-xl sm:rounded-2xl group-hover:bg-purple-600 group-hover:border-purple-400 group-hover:text-white transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <ServiceIcon className="w-6 h-6 sm:w-8 sm:h-8 2xl:w-10 2xl:h-10" />
               </div>
               
-              <h3 className={`text-xl sm:text-3xl lg:text-4xl font-black text-white tracking-wide uppercase ${cinzel.className}`}>
+              <h3 className={`text-2xl sm:text-3xl lg:text-4xl 2xl:text-5xl font-black text-white tracking-wide uppercase ${cinzel.className}`}>
                 {service.title}
               </h3>
             </div>
 
             {/* Brief Description */}
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light max-w-2xl mb-4">
+            <p className="text-sm sm:text-base 2xl:text-lg text-slate-300 leading-relaxed font-light mb-6">
               {service.brief}
             </p>
 
-            <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-4" />
+            <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-6" />
 
             {/* Feature Points */}
-            <ul className="space-y-2.5 mb-6">
+            <ul className="space-y-3 mb-8">
               {service.points.map((point, idx) => (
                 <li
                   key={idx}
-                  className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-light group-hover:translate-x-1 transition-transform duration-300"
+                  className="flex items-center gap-3.5 text-xs sm:text-sm 2xl:text-base text-slate-200 font-light group-hover:translate-x-1 transition-transform duration-300"
                 >
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-purple-950/80 border border-purple-500/60 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
-                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-purple-300 group-hover:text-white stroke-[3]" />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 2xl:w-6 2xl:h-6 rounded-full bg-purple-950/80 border border-purple-500/60 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:border-purple-400 transition-colors">
+                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 2xl:w-3.5 2xl:h-3.5 text-purple-300 group-hover:text-white stroke-[3]" />
                   </div>
                   <span>{point}</span>
                 </li>
@@ -219,33 +219,33 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
           </div>
 
           {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full pt-4 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row gap-4 w-full pt-6 border-t border-white/10">
             <a
               href={service.portfolioHref}
-              className="flex-1 py-3 px-4 bg-white text-purple-950 font-bold text-xs uppercase tracking-wider transition-all duration-300 hover:bg-purple-100 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
+              className="flex-1 py-3.5 px-6 bg-white text-purple-950 font-bold text-xs sm:text-sm 2xl:text-base uppercase tracking-wider transition-all duration-300 hover:bg-purple-100 active:scale-95 flex items-center justify-center gap-2 shadow-lg"
               style={{
                 clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)",
               }}
             >
               <span>{service.portfolioLabel}</span>
-              <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+              <ArrowUpRight className="w-4 h-4 2xl:w-5 2xl:h-5 stroke-[2.5]" />
             </a>
 
             <a
               href={service.pricingHref}
-              className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50 active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-6 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white font-bold text-xs sm:text-sm 2xl:text-base uppercase tracking-wider transition-all duration-300 shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50 active:scale-95 flex items-center justify-center gap-2"
               style={{
                 clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
               }}
             >
-              <Zap className="w-4 h-4 fill-current" />
+              <Zap className="w-4 h-4 2xl:w-5 2xl:h-5 fill-current" />
               <span>Pricing / Packages</span>
             </a>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Video Box */}
-        <div className="w-full lg:w-[420px] xl:w-[460px] flex flex-col justify-center items-center z-10 shrink-0">
+        {/* RIGHT COLUMN: Video Box (Dynamically Scaled on Large Screens) */}
+        <div className="w-full lg:w-[45%] xl:w-[48%] max-w-[650px] 2xl:max-w-[750px] flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0">
           <div 
             className="relative w-full aspect-[16/9] bg-black/80 border border-purple-500/40 overflow-hidden group/video shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-xl"
             style={{ clipPath: innerClipPath }}
@@ -264,15 +264,15 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-0 group-hover/video:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <button
                 onClick={togglePlay}
-                className="p-3.5 bg-purple-600/80 hover:bg-purple-500 text-white rounded-full backdrop-blur-md transition-all duration-300 transform scale-90 hover:scale-105 border border-purple-300/40 shadow-lg"
+                className="p-4 bg-purple-600/80 hover:bg-purple-500 text-white rounded-full backdrop-blur-md transition-all duration-300 transform scale-90 hover:scale-105 border border-purple-300/40 shadow-lg"
                 aria-label={isPlaying ? "Pause Video" : "Play Video"}
               >
-                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
               </button>
             </div>
 
             {/* Preview Tag */}
-            <div className="absolute top-3 left-3 px-2.5 py-1 bg-black/70 backdrop-blur-md border border-purple-500/40 text-[10px] font-mono tracking-widest text-purple-300 uppercase flex items-center gap-1.5 rounded-md">
+            <div className="absolute top-3.5 left-3.5 px-3 py-1 bg-black/70 backdrop-blur-md border border-purple-500/40 text-[10px] sm:text-xs font-mono tracking-widest text-purple-300 uppercase flex items-center gap-2 rounded-md">
               <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
               PREVIEW
             </div>
@@ -280,7 +280,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
         </div>
 
         {/* Bottom Accent Line */}
-        <div className="absolute bottom-0 left-12 sm:left-16 w-16 sm:w-20 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
+        <div className="absolute bottom-0 left-12 sm:left-16 w-16 sm:w-24 h-[2px] bg-purple-500/60 group-hover:bg-purple-400 group-hover:shadow-[0_0_12px_#a855f7] transition-all" />
       </div>
     </div>
   );
@@ -349,17 +349,17 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full bg-[#06030a] text-white overflow-hidden selection:bg-purple-600 selection:text-white py-12 sm:py-16 md:py-24">
+    <div ref={containerRef} className="w-full bg-[#06030a] text-white overflow-hidden selection:bg-purple-600 selection:text-white py-12 sm:py-16 md:py-24 2xl:py-32">
       
-      {/* MAIN TOP HEADER (Exact Matched Style) */}
+      {/* MAIN TOP HEADER */}
       <div
         ref={headerRef}
-        className={`z-10 text-center max-w-4xl mx-auto mb-8 sm:mb-12 md:mb-16 px-4 ${cinzel.className}`}
+        className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto mb-10 sm:mb-16 md:mb-20 px-4 ${cinzel.className}`}
       >
-        <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-1.5 sm:mb-2">
+        <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-base uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2 sm:mb-3">
           TAILORED CREATIVE SOLUTIONS
         </p>
-        <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
+        <h2 className="text-3xl sm:text-5xl md:text-7xl 2xl:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
           OUR SERVICES
         </h2>
       </div>
@@ -368,14 +368,14 @@ export default function ServicesSection() {
         <section
           key={service.id}
           id={`section-${service.id}`}
-          className="relative w-full flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12"
+          className="relative w-full flex flex-col justify-center items-center px-4 sm:px-6 lg:px-12 2xl:px-16 py-8 sm:py-12 2xl:py-16"
         >
           {/* Ambient Lighting Background */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] lg:w-[800px] h-[250px] sm:h-[400px] bg-purple-600/10 blur-[130px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] lg:w-[900px] 2xl:w-[1200px] h-[250px] sm:h-[400px] 2xl:h-[500px] bg-purple-600/10 blur-[140px] rounded-full pointer-events-none" />
 
           {/* Counter Label Header */}
-          <div className={`z-10 text-center max-w-4xl mx-auto flex flex-col items-center mb-4 sm:mb-6 ${cinzel.className}`}>
-            <p className="text-xs sm:text-sm uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-300/70">
+          <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center mb-4 sm:mb-6 ${cinzel.className}`}>
+            <p className="text-xs sm:text-sm 2xl:text-base uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-300/70">
               0{index + 1} / SERVICE SPECIFICATION
             </p>
           </div>
