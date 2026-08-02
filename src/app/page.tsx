@@ -16,7 +16,7 @@ export default function Home() {
       <FullScreenServices />
       <OurWorkSection />
       <VideoTestimonials />
-      <FAQSection />
+      {/* <FAQSection /> */}
       <ProcessSection />
       {/* <PricingSection /> */}
       <BookingSection />
