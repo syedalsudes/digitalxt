@@ -13,17 +13,17 @@ export default function Navbar() {
   const servicesNav = [
     {
       name: "SaaS Videos",
-      href: "/",
+      href: "/services/saas-videos",
       icon: Video,
     },
     {
       name: "Short Videos",
-      href: "/",
+      href: "/services/short-form",
       icon: TabletSmartphone,
     },
     {
       name: "Real Estate",
-      href: "/",
+      href: "/services/real-estate",
       icon: House,
     },
   ];
