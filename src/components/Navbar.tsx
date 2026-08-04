@@ -22,7 +22,7 @@ export default function Navbar() {
       icon: Video,
     },
     {
-      name: "Short Videos",
+      name: "Custom Editing",
       href: "/services/short-form",
       icon: TabletSmartphone,
     },

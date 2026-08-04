@@ -1,10 +1,6 @@
 'use client';
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Cinzel } from "next/font/google";
@@ -14,17 +10,18 @@ import {
   Wand2,
   Volume2,
   Layers,
+  ArrowRight,
   ArrowUpRight,
   PhoneCall,
-  CreditCard,
-  Infinity,
-  Repeat,
+  Clock,
   Sparkles,
-  Target,
-  Rocket,
+  ShieldCheck,
+  Building2,
+  MessageSquarePlus,
   Video,
-  Flame,
-  Star
+  Film,
+  Users,
+  House
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -33,22 +30,19 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["700", "900"],
-});
+const cinzel = Cinzel({ subsets: ["latin"], weight: ["700", "900"] });
 
-// HERO FEATURES / VALUE OFFERINGS FOR THIS SERVICE
+// Hero Features
 const heroFeatures = [
-  { icon: Target, title: "High-Impact Hooks", desc: "First 3-Second Retention" },
-  { icon: Sparkles, title: "Dynamic FX", desc: "Modern Visual Motion" },
-  { icon: Wand2, title: "Custom Branding", desc: "Colors & Typography" },
-  { icon: Volume2, title: "Cinematic Sound", desc: "Audio Design & SFX" },
-  { icon: Rocket, title: "Optimized Ratios", desc: "16:9 & 9:16 Formats" },
-  { icon: Layers, title: "Fast Delivery", desc: "Turnaround in 48-72h" },
+  { icon: Video, title: "Short & Long Form", desc: "Multi-Format Support" },
+  { icon: Wand2, title: "Motion Graphics", desc: "Sleek Animations" },
+  { icon: Volume2, title: "Sound Design", desc: "SFX & Audio Polish" },
+  { icon: Sparkles, title: "Color Grading", desc: "Cinematic Styles" },
+  { icon: Building2, title: "White Labeling", desc: "Agency Outsourcing" },
+  { icon: Clock, title: "24-48hr Delivery", desc: "Fast Turnaround" },
 ];
 
-// CLEAN WORK VIDEOS LIST
+// Clean Work Videos List
 const worksList = [
   { id: 1, video: "/videos/ourwork/workvid1.mp4" },
   { id: 2, video: "/videos/ourwork/workvid2.mp4" },
@@ -58,7 +52,6 @@ const worksList = [
   { id: 6, video: "/videos/ourwork/workvid2.mp4" },
 ];
 
-// PRICING PLANS INTERFACE & DATA
 interface FeatureItem {
   text: string;
   included: boolean;
@@ -76,58 +69,111 @@ interface PricingPlan {
   isPopular?: boolean;
 }
 
-const pricingPlans: PricingPlan[] = [
+// Short-Form Packages
+const shortFormPlans: PricingPlan[] = [
   {
-    id: "starter",
+    id: "short-starter",
     badge: "STARTER",
-    originalPrice: "$500",
-    price: "$350",
-    videosCount: "Starter Pack",
-    perVideoPrice: "Single Asset",
-    description: "Ideal for testing new creatives and quick promotional campaigns.",
+    originalPrice: "$400",
+    price: "$250",
+    videosCount: "5 Shorts/Reels",
+    perVideoPrice: "$50/Video",
+    description: "Ideal for creators testing high-retention short content.",
     features: [
-      { text: "Creative Strategy & Hook", included: true },
-      { text: "Professional Motion FX", included: true },
-      { text: "Licensed Audio & SFX", included: true },
-      { text: "2 Revisions Included", included: true },
+      { text: "Up to 60s Vertical Videos", included: true },
+      { text: "Dynamic Captions & Motion FX", included: true },
+      { text: "Sound SFX & Background Music", included: true },
+      { text: "Unlimited Revisions", included: true },
     ],
     isPopular: false,
   },
   {
-    id: "pro",
+    id: "short-growth",
     badge: "MOST POPULAR",
-    originalPrice: "$900",
-    price: "$650",
-    videosCount: "Growth Suite",
-    perVideoPrice: "Best Value",
-    description: "Designed for scaling ad creatives and driving maximum conversions.",
+    originalPrice: "$800",
+    price: "$450",
+    videosCount: "10 Shorts/Reels",
+    perVideoPrice: "$45/Video",
+    description: "Perfect for active personal brands and business social channels.",
     features: [
-      { text: "A/B Hook Variations", included: true },
-      { text: "Full Custom Animation & Graphics", included: true },
-      { text: "Pro Sound Design & Voiceover", included: true },
-      { text: "3 Revisions Included", included: true },
+      { text: "Up to 60s Vertical Videos", included: true },
+      { text: "Custom Motion Graphics & B-Roll", included: true },
+      { text: "Sound SFX & Audio Enhancement", included: true },
+      { text: "Unlimited Revisions", included: true },
     ],
     isPopular: true,
   },
   {
-    id: "enterprise",
-    badge: "ENTERPRISE",
+    id: "short-pro",
+    badge: "SCALE PACK",
     originalPrice: "$1500",
-    price: "$1150",
-    videosCount: "Scale Pack",
-    perVideoPrice: "Full Campaign",
-    description: "Complete video marketing solution with unlimited revision Support.",
+    price: "$850",
+    videosCount: "20 Shorts/Reels",
+    perVideoPrice: "$42.5/Video",
+    description: "Complete monthly short-form content engine for maximum reach.",
     features: [
-      { text: "Full Campaign Production", included: true },
-      { text: "Multi-Platform Aspect Ratios", included: true },
-      { text: "Dedicated Motion Designer", included: true },
+      { text: "Up to 60s Vertical Videos", included: true },
+      { text: "Advanced Animation & Hook Testing", included: true },
+      { text: "Dedicated Motion Editor", included: true },
       { text: "Unlimited Revisions", included: true },
     ],
     isPopular: false,
   },
 ];
 
-export default function ServiceThreePage() {
+// Long-Form Packages
+const longFormPlans: PricingPlan[] = [
+  {
+    id: "long-single",
+    badge: "STARTER",
+    originalPrice: "$500",
+    price: "$350",
+    videosCount: "1 YouTube Video",
+    perVideoPrice: "Up to 10 Mins",
+    description: "Ideal for long-form podcasts, tutorials, or vlog edits.",
+    features: [
+      { text: "Full Timeline Cut & Pacing", included: true },
+      { text: "Color Grading & SFX Polish", included: true },
+      { text: "Subtitles & Graphic Overlays", included: true },
+      { text: "Unlimited Revisions", included: true },
+    ],
+    isPopular: false,
+  },
+  {
+    id: "long-bundle",
+    badge: "MOST POPULAR",
+    originalPrice: "$1600",
+    price: "$1100",
+    videosCount: "4 YouTube Videos",
+    perVideoPrice: "Up to 15 Mins Each",
+    description: "Best value bundle for consistent monthly YouTube publishing.",
+    features: [
+      { text: "Complete Editing & Motion FX", included: true },
+      { text: "Custom Intro/Outro Graphics", included: true },
+      { text: "Sound Design & B-Roll Integration", included: true },
+      { text: "Unlimited Revisions", included: true },
+    ],
+    isPopular: true,
+  },
+  {
+    id: "long-agency",
+    badge: "ENTERPRISE",
+    originalPrice: "$3000",
+    price: "$2200",
+    videosCount: "8 YouTube Videos",
+    perVideoPrice: "Custom Duration",
+    description: "High-volume editing pipeline for channels and media networks.",
+    features: [
+      { text: "Dedicated Senior Video Editor", included: true },
+      { text: "Multi-Cam & Advanced Storytelling", included: true },
+      { text: "Thumbnail Concept Guidance", included: true },
+      { text: "Unlimited Revisions", included: true },
+    ],
+    isPopular: false,
+  },
+];
+
+export default function CustomVideoEditingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -152,70 +198,94 @@ export default function ServiceThreePage() {
   return (
     <div ref={pageRef} className="w-full bg-[#06030a] text-white min-h-screen selection:bg-purple-600 selection:text-white overflow-hidden">
       
-      {/* Ambient Background Glow */}
+      {/* Background Glow */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[400px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
       {/* ================= HERO SECTION ================= */}
-      <section className="relative z-10 min-h-[85vh] lg:min-h-screen w-full flex flex-col items-center justify-center pt-28 pb-16 md:pt-36 md:pb-24 px-4 sm:px-6 max-w-7xl mx-auto">
+      <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 px-4 sm:px-6 max-w-7xl mx-auto">
         <div
           ref={headerRef}
-          className={`z-10 text-center max-w-5xl mx-auto mb-12 sm:mb-16 px-4 ${cinzel.className}`}
+          className={`z-10 text-center max-w-5xl mx-auto px-4 ${cinzel.className}`}
         >
-          <div className="flex items-center justify-center gap-3 mb-3 font-sans">
-            <span className="w-8 sm:w-12 h-[1px] bg-gradient-to-r from-transparent to-purple-400/60" />
-            <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.35em] sm:tracking-[0.45em] text-purple-300/80 font-bold">
-              DIGITAL CREATIVE SUITE
+          {/* Badge */}
+          <div className="flex items-center justify-center gap-3 mb-6 sm:mb-8 font-sans">
+            <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-r from-transparent to-purple-400/60" />
+            <p className="text-xs sm:text-sm md:text-base uppercase tracking-[0.35em] sm:tracking-[0.45em] text-purple-300/80 font-bold">
+              PREMIUM POST-PRODUCTION
             </p>
-            <span className="w-8 sm:w-12 h-[1px] bg-gradient-to-l from-transparent to-purple-400/60" />
+            <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-l from-transparent to-purple-400/60" />
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl leading-[1.05]">
-            CREATIVE ADS & PROMOS
+          {/* MAIN HEADLINE */}
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[90px] font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl leading-[1.08] my-4">
+            CUSTOM VIDEO EDITING
           </h1>
 
-          <p className="font-sans text-slate-400 text-xs sm:text-sm md:text-base mt-5 font-normal tracking-wide max-w-2xl mx-auto leading-relaxed">
-            Crafting high-converting visual commercials and dynamic video assets tailored to scale your brand presence across digital channels.
+          {/* DESCRIPTION */}
+          <p className="font-sans text-slate-200 text-sm sm:text-base md:text-lg lg:text-xl mt-8 sm:mt-10 font-normal tracking-wide max-w-3xl mx-auto leading-relaxed drop-shadow-sm">
+            High-converting short-form reels, cinematic YouTube edits, and custom post-production workflows tailored for brands, creators, and digital agencies.
           </p>
+
+          {/* Action Buttons */}
+          <div className="mt-10 sm:mt-12 lg:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto px-4 sm:px-0 font-sans">
+            <Link
+              href="/#book-call"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-7 sm:px-9 lg:px-10 py-3.5 sm:py-4 lg:py-4.5 text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-purple-500/30"
+            >
+              <span>Book a Call</span>
+              <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
+            </Link>
+
+            <div className="relative group/btn w-full sm:w-auto">
+              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
+              <Link
+                href="/"
+                target="_blank"
+                className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 sm:px-9 lg:px-10 py-3.5 sm:py-4 lg:py-4.5 rounded-full text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
+              >
+                <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
+                <span className="relative z-10">WhatsApp Us</span>
+                <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="fade-up max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 w-full">
-          {heroFeatures.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className="group relative p-5 sm:p-6 rounded-2xl bg-[#0d061c]/60 border border-purple-500/20 hover:border-purple-400/60 transition-all duration-300 backdrop-blur-xl overflow-hidden hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(168,85,247,0.2)]"
-              >
-                <div className="absolute -top-10 -right-10 w-24 h-24 bg-purple-600/15 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-all duration-500" />
-                <div className="absolute top-0 right-8 w-10 h-[2px] bg-purple-500/30 group-hover:bg-purple-400 group-hover:shadow-[0_0_10px_#a855f7] transition-all" />
-
-                <div className="flex items-start gap-4 relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-[#150a2b] border border-purple-400/40 flex items-center justify-center shrink-0 text-purple-300 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                    <Icon className="w-5 h-5 stroke-[2]" />
+        {/* HERO FEATURES BAR */}
+        <div className="w-full max-w-7xl mx-auto mt-16 md:mt-24 px-2 sm:px-4 fade-up z-10">
+          <div className="w-full py-6 px-5 sm:px-8 rounded-2xl md:rounded-full bg-[#0e0720]/90 border border-purple-400/40 backdrop-blur-xl shadow-[0_0_35px_rgba(168,85,247,0.2)]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-6 items-center justify-center">
+              {heroFeatures.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <div key={index} className="flex items-center gap-3 justify-start sm:justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-950/90 border border-purple-400/60 flex items-center justify-center text-purple-200 shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
+                    </div>
+                    <div className="text-left font-sans whitespace-nowrap">
+                      <strong className="block text-white font-extrabold text-xs sm:text-sm lg:text-[15px] leading-tight tracking-wide">
+                        {item.title}
+                      </strong>
+                      <span className="text-[11px] sm:text-xs text-purple-200/90 font-medium">
+                        {item.desc}
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="flex flex-col">
-                    <h3 className="text-white font-bold text-sm sm:text-base tracking-wide group-hover:text-purple-200 transition-colors">
-                      {item.title}
-                    </h3>
-                    
-                    <span className="inline-block mt-1 text-[10px] font-mono font-semibold tracking-wider text-purple-300/80 uppercase">
-                      {item.desc}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ================= OUR WORK GRID SECTION ================= */}
       <WorkGridSection />
 
-      {/* ================= PACKAGES SECTION ================= */}
+      {/* ================= PACKAGES SECTION (SHORT & LONG FORM) ================= */}
       <PricingPackagesSection />
+
+      {/* ================= WHITE LABELING FOR AGENCIES ================= */}
+      <WhiteLabelAgencySection />
 
     </div>
   );
@@ -227,7 +297,6 @@ function WorkGridSection() {
   return (
     <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 border-t border-purple-950/40 overflow-hidden">
       
-      {/* Background Image with Opacity & Blur Added */}
       <Image
         src="/servicesvid.png"
         alt="Our Work Background"
@@ -261,7 +330,7 @@ function WorkGridCard({ item }: { item: { id: number; video: string } }) {
 
   const handleMouseEnter = () => {
     if (videoRef.current) {
-      videoRef.current.muted = false; // Audio plays on hover
+      videoRef.current.muted = false;
       const promise = videoRef.current.play();
       if (promise !== undefined) {
         promise.catch(() => {
@@ -300,7 +369,7 @@ function WorkGridCard({ item }: { item: { id: number; video: string } }) {
   );
 }
 
-/* ================= PRICING PACKAGES SECTION ================= */
+/* ================= PRICING CARD COMPONENT ================= */
 
 function PricingCard({ plan }: { plan: PricingPlan }) {
   const [rotateX, setRotateX] = useState(0);
@@ -443,17 +512,9 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
         </div>
 
         <div className="flex flex-col gap-2 mt-auto z-10">
-          <button
-            className="w-full py-2.5 px-4 bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 text-white font-bold text-[11px] uppercase tracking-wider transition-all duration-300 active:scale-95"
-            style={{
-              clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-            }}
-          >
-            Customize Plan
-          </button>
-
-          <button
-            className={`w-full py-2.5 px-4 text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
+          <Link
+            href="/#book-call"
+            className={`w-full py-3 px-4 text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
               plan.isPopular
                 ? "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
                 : "bg-white text-purple-950 hover:bg-gray-100"
@@ -464,7 +525,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           >
             <Zap className="w-3.5 h-3.5 fill-current" />
             <span>Order Video</span>
-          </button>
+          </Link>
         </div>
 
         <div className="absolute bottom-0 left-10 w-12 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
@@ -473,9 +534,10 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
   );
 }
 
+/* ================= PRICING PACKAGES SECTION ================= */
+
 function PricingPackagesSection() {
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLDivElement>(null);
 
   return (
     <section className="relative w-full bg-[#06030a] text-white border-t border-purple-950/40 overflow-hidden flex flex-col justify-start pt-16 pb-20 md:pt-24 md:pb-32">
@@ -488,31 +550,175 @@ function PricingPackagesSection() {
         </h2>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
-        <div
-          ref={cardsWrapperRef}
-          className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-8 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
-        >
-          {pricingPlans.map((plan) => (
-            <div key={plan.id} className="snap-center shrink-0 flex justify-center">
-              <PricingCard plan={plan} />
-            </div>
-          ))}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 space-y-16">
+        
+        {/* CATEGORY 1: SHORT-FORM CONTENT */}
+        <div>
+          <div className="flex items-center gap-3 mb-8 justify-center">
+            <Video className="w-5 h-5 text-purple-400" />
+            <h3 className={`text-xl sm:text-2xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
+              Short-Form Packages (Reels / Shorts)
+            </h3>
+          </div>
+          <div
+            ref={cardsWrapperRef}
+            className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
+          >
+            {shortFormPlans.map((plan) => (
+              <div key={plan.id} className="snap-center shrink-0 flex justify-center">
+                <PricingCard plan={plan} />
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="max-w-4xl mx-auto mt-16 sm:mt-20 px-4 flex flex-col items-center">
+        {/* CATEGORY 2: LONG-FORM CONTENT */}
+        <div>
+          <div className="flex items-center gap-3 mb-8 justify-center">
+            <Film className="w-5 h-5 text-purple-400" />
+            <h3 className={`text-xl sm:text-2xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
+              Long-Form Packages (YouTube / Vlogs)
+            </h3>
+          </div>
+          <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0">
+            {longFormPlans.map((plan) => (
+              <div key={plan.id} className="snap-center shrink-0 flex justify-center">
+                <PricingCard plan={plan} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ACTION BUTTONS BELOW PACKAGES */}
+        <div className="max-w-4xl mx-auto pt-8 px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
           
-          <div ref={buttonRef} className="z-10 mt-12 sm:mt-16 shrink-0 relative group/btn px-4">
+          {/* Book A Call */}
+          <div className="shrink-0 relative group/btn w-full sm:w-auto">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
             <Link
-              href="/#book-a-call"
-              className="relative inline-flex items-center gap-3 px-8 sm:px-10 py-4 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/40 bg-[#120824]/90 shadow-[0_0_25px_rgba(168,85,247,0.25)]"
+              href="/#book-call"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/40 bg-[#120824]/90 shadow-[0_0_25px_rgba(168,85,247,0.25)]"
             >
-              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
               <PhoneCall className="relative z-10 w-4 h-4 text-purple-400" />
               <span className="relative z-10">Book A Call</span>
               <ArrowUpRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
             </Link>
+          </div>
+
+          {/* Get Custom Quote */}
+          <div className="shrink-0 relative group/btn w-full sm:w-auto">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 opacity-30 blur-md group-hover/btn:opacity-70 transition-opacity duration-300" />
+            <Link
+              href="/#book-call"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-purple-950/60"
+            >
+              <MessageSquarePlus className="relative z-10 w-4 h-4 text-purple-300" />
+              <span className="relative z-10">Get Custom Quote</span>
+              <ArrowUpRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ================= WHITE LABELING FOR AGENCIES ================= */
+
+function WhiteLabelAgencySection() {
+  const agencyFeatures = [
+    {
+      title: "100% NDA & Confidential",
+      desc: "Your clients remain strictly yours. We operate fully behind the scenes.",
+      icon: ShieldCheck,
+    },
+    {
+      title: "Dedicated Channel",
+      desc: "Direct Slack or Teams integration for instant updates and revisions.",
+      icon: Users,
+    },
+    {
+      title: "Scalable Post-Production",
+      desc: "Handle 10x content volume without expanding your internal overhead.",
+      icon: Clock,
+    },
+  ];
+
+  return (
+    <section className="relative w-full bg-[#06030a] text-white py-20 sm:py-28 border-t border-purple-950/40 overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        {/* Main Card Container */}
+        <div className="group relative p-[1.5px] transition-all duration-500">
+          
+          {/* Card Border Gradient & Outer Glow */}
+          <div 
+            className="absolute inset-0 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-purple-800 opacity-80 group-hover:opacity-100 shadow-[0_0_40px_rgba(168,85,247,0.3)] transition-all duration-500"
+            style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
+          />
+
+          {/* Card Content Inner */}
+          <div 
+            className="relative p-8 sm:p-12 bg-[#0d061c]/95 backdrop-blur-2xl flex flex-col justify-between h-full w-full"
+            style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
+          >
+            {/* Top Accent Line */}
+            <div className="absolute top-0 right-16 w-20 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
+
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-purple-500/20">
+              <div className="text-left">
+                <span 
+                  className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] uppercase px-3.5 py-1.5 border bg-purple-600/30 border-purple-400 text-purple-200 mb-3"
+                  style={{ clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))" }}
+                >
+                  <House className="w-3.5 h-3.5 text-purple-300" />
+                  AGENCY OUTSOURCING
+                </span>
+
+                <h3 className={`text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-wider ${cinzel.className}`}>
+                  White Label Video Editing
+                </h3>
+              </div>
+
+              <Link
+                href="/#book-call"
+                className="shrink-0 py-3.5 px-8 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
+                style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
+              >
+                <Zap className="w-4 h-4 fill-current" />
+                <span>Partner With Us</span>
+              </Link>
+            </div>
+
+            {/* Features 3-Column Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {agencyFeatures.map((item, idx) => {
+                const Icon = item.icon;
+                return (
+                  <div 
+                    key={idx}
+                    className="p-5 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 transition-all duration-300 group/feature"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-purple-950/80 border border-purple-500/50 flex items-center justify-center text-purple-300 mb-4 group-hover/feature:bg-purple-600 group-hover/feature:text-white transition-colors">
+                      <Icon className="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <h4 className="text-white font-bold text-sm sm:text-base mb-1.5 tracking-wide">
+                      {item.title}
+                    </h4>
+                    <p className="text-gray-400 text-xs font-light leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Accent Line */}
+            <div className="absolute bottom-0 left-16 w-20 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
           </div>
 
         </div>

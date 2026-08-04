@@ -201,8 +201,9 @@ export default function BookMeeting({
 
   return (
     <section
+      id="book-call"
       ref={sectionRef}
-      className="relative w-full py-20 sm:py-28 2xl:py-36 px-4 sm:px-8 2xl:px-16 bg-[#08050c] text-white flex flex-col items-center justify-center overflow-hidden selection:bg-purple-500/30 select-none"
+      className="relative w-full py-20 sm:py-28 2xl:py-36 px-4 sm:px-8 2xl:px-16 bg-[#08050c] text-white flex flex-col items-center justify-center overflow-hidden selection:bg-purple-500/30 select-none scroll-mt-20"
     >
       {/* Background Ambient Glow Scaled */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[800px] 2xl:w-[1200px] h-[350px] sm:h-[500px] 2xl:h-[700px] bg-purple-600/15 blur-[120px] sm:blur-[170px] 2xl:blur-[220px] rounded-full pointer-events-none" />

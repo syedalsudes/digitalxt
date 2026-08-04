@@ -6,11 +6,11 @@ import {
     PhoneCall,
     LayoutGrid,
     User,
-    MessageSquareText,
+    UserCheck,
     Video,
     CheckCircle2,
     Zap,
-    ArrowDown
+    Clock
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -20,7 +20,7 @@ const cinzel = Cinzel({
     weight: ["700"],
 });
 
-// Exact icons & text matching your reference image
+// Client Instructions ke mutabiq exact text & icons
 const processSteps = [
     {
         step: "STEP 01",
@@ -30,32 +30,32 @@ const processSteps = [
     },
     {
         step: "STEP 02",
-        title: "Select a Package",
+        title: "Select Suitable Package",
         desc: "Choose the package that best fits your requirements.",
         icon: LayoutGrid,
     },
     {
         step: "STEP 03",
-        title: "You Signup",
+        title: "SignUp",
         desc: "Complete a quick signup process to get started.",
         icon: User,
     },
     {
         step: "STEP 04",
-        title: "Content Manager Will Contact",
-        desc: "Our content manager will reach out to understand your vision.",
-        icon: MessageSquareText,
+        title: "Onboarding",
+        desc: "Your dedicated editor, Content manager and Content sheet assignment.",
+        icon: UserCheck,
     },
     {
         step: "STEP 05",
-        title: "You Record Your Content",
-        desc: "Record your content as per our simple guidelines.",
+        title: "Raw Footage Submission",
+        desc: "Record your content and submit at your ease.",
         icon: Video,
     },
     {
         step: "STEP 06",
-        title: "We Deliver",
-        desc: "We edit and deliver your video in 24–48 hours.",
+        title: "Delivery",
+        desc: "Your team will start working and deliver regularly.",
         icon: CheckCircle2,
     },
 ];
@@ -131,7 +131,7 @@ export default function ProcessSection() {
                         <span className="w-6 sm:w-10 h-[1px] bg-gradient-to-l from-transparent to-purple-400/60" />
                     </div>
 
-                    {/* Clean Main Heading as requested */}
+                    {/* Main Heading */}
                     <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl leading-tight">
                         A SIMPLE PROCESS
                     </h2>
@@ -158,7 +158,7 @@ export default function ProcessSection() {
                             return (
                                 <div key={index} className="flex flex-col items-center group text-center">
 
-                                    {/* Circular Node Icon (Exact Matching Glow & Border Style) */}
+                                    {/* Circular Node Icon */}
                                     <div className="relative mb-6 z-10">
                                         <div className="absolute inset-0 rounded-full bg-purple-500/30 blur-md group-hover:bg-purple-400/50 transition-all duration-300" />
 
@@ -167,7 +167,7 @@ export default function ProcessSection() {
                                         </div>
                                     </div>
 
-                                    {/* Clean Content Container (Without Card Borders) */}
+                                    {/* Content Container */}
                                     <div className="w-full flex flex-col items-center px-2">
                                         {/* Step Number */}
                                         <span className="text-[11px] font-mono font-bold tracking-widest text-purple-400/90 uppercase mb-2">
@@ -191,16 +191,29 @@ export default function ProcessSection() {
                     </div>
                 </div>
 
-                {/* BOTTOM LIGHTNING PILL */}
-                <div className="mt-14 sm:mt-20 flex justify-center px-4">
-                    <div className="relative group/pill">
+                {/* BELOW PROCESS BUTTON / DELIVERY BADGES */}
+                <div className="mt-14 sm:mt-20 flex flex-col sm:flex-row items-center justify-center gap-4 px-4">
+                    
+                    {/* Short Form Badge */}
+                    <div className="relative group/pill w-full sm:w-auto">
                         <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/pill:opacity-75 transition-opacity duration-300" />
-                        <div className="relative inline-flex items-center gap-2.5 px-6 sm:px-8 py-3 rounded-full border border-purple-400/40 bg-[#120824]/95 text-purple-200 text-xs sm:text-sm font-bold tracking-wider uppercase">
-                            <Zap className="w-4 h-4 text-purple-400 fill-purple-400/40 animate-pulse" />
-                            <span>24-48 HRS PER VIDEO DELIVERY</span>
+                        <div className="relative flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 rounded-full border border-purple-400/40 bg-[#120824]/95 text-purple-200 text-xs sm:text-sm font-bold tracking-wider uppercase shadow-lg">
+                            <Zap className="w-4 h-4 text-purple-400 fill-purple-400/40 animate-pulse shrink-0" />
+                            <span>24 Hrs Delivery for Short Form Videos</span>
                         </div>
                     </div>
+
+                    {/* Long Form Badge */}
+                    <div className="relative group/pill w-full sm:w-auto">
+                        <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/pill:opacity-75 transition-opacity duration-300" />
+                        <div className="relative flex items-center justify-center gap-2.5 px-6 sm:px-8 py-3.5 rounded-full border border-purple-400/40 bg-[#120824]/95 text-purple-200 text-xs sm:text-sm font-bold tracking-wider uppercase shadow-lg">
+                            <Clock className="w-4 h-4 text-purple-400 shrink-0" />
+                            <span>48 Hrs Delivery for Long Form Videos</span>
+                        </div>
+                    </div>
+
                 </div>
+
             </div>
         </section>
     );

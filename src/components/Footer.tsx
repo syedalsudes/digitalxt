@@ -3,7 +3,6 @@
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import { Cinzel } from "next/font/google";
-import { Mail, ArrowUpRight, Sparkles } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -64,41 +63,18 @@ export default function Footer() {
   return (
     <footer
       ref={footerRef}
-      className="relative w-full bg-[#040206] text-white overflow-hidden pt-20 pb-12 selection:bg-purple-500/30 border-t border-purple-950/40"
+      className="relative w-full bg-[#040206] text-white overflow-hidden pt-16 pb-12 selection:bg-purple-500/30 border-t border-purple-950/40"
     >
       {/* Background Glows */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[350px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none" />
 
       {/* Giant Watermark Agency Typography in Background */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none select-none opacity-[0.03] whitespace-nowrap text-[18vw] font-black uppercase tracking-tighter leading-none text-white">
-        DIGITALXT
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none select-none opacity-[0.03] whitespace-nowrap text-[16vw] font-black uppercase tracking-tighter leading-none text-white">
+        DIGITALIX STUDIOS
       </div>
 
       <div ref={contentRef} className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12">
         
-        {/* TOP CALLOUT BAR */}
-        <div className="mb-16 p-8 sm:p-10 rounded-3xl bg-[#0c0617]/80 border border-purple-500/20 backdrop-blur-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs uppercase tracking-[0.3em] font-mono text-purple-300/80 font-bold">
-                Ready to elevate your visual identity?
-              </span>
-            </div>
-            <h3 className={`text-2xl sm:text-4xl font-bold uppercase text-white ${cinzel.className}`}>
-              Let's create something iconic.
-            </h3>
-          </div>
-
-          <a
-            href="mailto:contact@digitalxt.com"
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-600/30 hover:scale-105 transition-all duration-300 shrink-0"
-          >
-            <Mail className="w-4 h-4 text-purple-200" />
-            <span>Send Direct Mail</span>
-            <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
-          </a>
-        </div>
-
         {/* MAIN NAVIGATION & BRANDING GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 pb-16 border-b border-white/10">
           
@@ -108,13 +84,13 @@ export default function Footer() {
               <a href="#" className="inline-flex items-center gap-3 mb-5 group">
                 <Image
                   src="/logo.png"
-                  alt="DigitalXT Logo"
+                  alt="Digitalix Studios Logo"
                   width={44}
                   height={44}
                   className="w-10 h-10 object-contain transition-transform duration-500 group-hover:scale-110"
                 />
-                <span className={`text-2xl font-black uppercase tracking-widest bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent ${cinzel.className}`}>
-                  DigitalXT
+                <span className={`text-xl sm:text-2xl font-black uppercase tracking-widest bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent ${cinzel.className}`}>
+                  Digitalix Studios
                 </span>
               </a>
 
@@ -169,7 +145,7 @@ export default function Footer() {
           </div>
 
           {/* Social Links (Col 9-12) */}
-          <div className="lg:col-span-3 flex flex-col justify-between space-y-6">
+          <div className="lg:col-span-3 flex flex-col justify-start space-y-6">
             <div>
               <h4 className={`text-xs font-bold uppercase tracking-widest text-purple-400 mb-6 ${cinzel.className}`}>
                 Connect With Us
@@ -207,17 +183,13 @@ export default function Footer() {
                 </a>
               </div>
             </div>
-
-            <p className="text-[11px] text-gray-500 font-mono">
-              Karachi / Global Remote
-            </p>
           </div>
 
         </div>
 
         {/* BOTTOM BAR CREDITS */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-gray-500 gap-4">
-          <p>© {currentYear} DigitalXT Studios. All rights reserved.</p>
+          <p>© {currentYear} Digitalix Studios. All rights reserved.</p>
           
           <p className="text-gray-400">
             Crafted with precision by{" "}

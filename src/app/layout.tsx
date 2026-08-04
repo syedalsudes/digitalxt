@@ -20,19 +20,19 @@ const geistMono = localFont({
 // Professional SEO & Branding Metadata for Digitalix Studios
 export const metadata: Metadata = {
   title: {
-    default: "Digitalix Studios | Professional Video Editing Agency",
+    default: "Digitalix Studios | Premium Video Production For Modern Brands",
     template: "%s | Digitalix Studios",
   },
   description:
-    "Digitalix Studios is a premier video editing agency specializing in high-converting short-form reels, cinematic edits, commercial video production, and YouTube content creation.",
+    "Premium Video Production For Modern Brands. Digitalix Studios specializes in high-converting custom editing, short-form content, commercial production, and YouTube content creation.",
   keywords: [
     "Digitalix Studios",
+    "Premium Video Production",
     "Video Editing Agency",
-    "Professional Video Editor",
+    "Custom Editing Services",
     "Short Form Video Editing",
     "Cinematic Video Editing",
-    "YouTube Video Editor",
-    "Reels and TikTok Editor",
+    "Modern Brand Video Production",
   ],
   authors: [{ name: "Digitalix Studios" }],
   creator: "Digitalix Studios",
@@ -50,14 +50,14 @@ export const metadata: Metadata = {
 
   // Open Graph (For Facebook, LinkedIn, WhatsApp link previews)
   openGraph: {
-    title: "Digitalix Studios | Professional Video Editing Agency",
+    title: "Digitalix Studios | Premium Video Production For Modern Brands",
     description:
-      "Transforming raw footage into cinematic, high-converting video stories. Expert short-form and long-form video editing services.",
-    url: "https://digitalixstudios.com", // Apni actual domain URL yahan likhein
+      "Premium Video Production For Modern Brands. Transforming raw footage into cinematic, high-converting video stories.",
+    url: "https://digitalixstudios.com",
     siteName: "Digitalix Studios",
     images: [
       {
-        url: "/logo.png", // Social shares par dikhne wala logo ya thumbnail
+        url: "/logo.png",
         width: 1200,
         height: 630,
         alt: "Digitalix Studios Logo",
@@ -70,9 +70,9 @@ export const metadata: Metadata = {
   // Twitter Cards
   twitter: {
     card: "summary_large_image",
-    title: "Digitalix Studios | Professional Video Editing Agency",
+    title: "Digitalix Studios | Premium Video Production For Modern Brands",
     description:
-      "Transforming raw footage into cinematic, high-converting video stories.",
+      "Premium Video Production For Modern Brands. Transforming raw footage into high-converting visual stories.",
     images: ["/logo.png"],
   },
 };

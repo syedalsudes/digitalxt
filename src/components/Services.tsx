@@ -244,7 +244,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Video Box (Dynamically Scaled on Large Screens) */}
+        {/* RIGHT COLUMN: Video Box */}
         <div className="w-full lg:w-[45%] xl:w-[48%] max-w-[650px] 2xl:max-w-[750px] flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0">
           <div 
             className="relative w-full aspect-[16/9] bg-black/80 border border-purple-500/40 overflow-hidden group/video shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-xl"
@@ -373,9 +373,9 @@ export default function ServicesSection() {
           {/* Ambient Lighting Background */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] lg:w-[900px] 2xl:w-[1200px] h-[250px] sm:h-[400px] 2xl:h-[500px] bg-purple-600/10 blur-[140px] rounded-full pointer-events-none" />
 
-          {/* Counter Label Header */}
-          <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center mb-4 sm:mb-6 ${cinzel.className}`}>
-            <p className="text-xs sm:text-sm 2xl:text-base uppercase tracking-[0.3em] sm:tracking-[0.5em] text-purple-300/70">
+          {/* Counter Label Header (UPDATED: Bigger, Bolder & Solid White) */}
+          <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center mb-6 sm:mb-8 ${cinzel.className}`}>
+            <p className="text-lg sm:text-2xl md:text-3xl 2xl:text-4xl font-extrabold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
               0{index + 1} / SERVICE SPECIFICATION
             </p>
           </div>
