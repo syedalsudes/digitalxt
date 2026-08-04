@@ -13,7 +13,7 @@ const cinzel = Cinzel({
   weight: ["700"],
 });
 
-// Dynamic Video List (Add as many videos as needed)
+// Dynamic Video List
 const worksList = [
   { id: 1, video: "/videos/ourwork/workvid1.mp4" },
   { id: 2, video: "/videos/ourwork/workvid2.mp4" },
@@ -106,7 +106,6 @@ export default function OurWorkSection() {
     if (!isDragging) return;
     setIsDragging(false);
 
-    // Swipe Threshold (40px)
     if (dragOffset < -40) {
       nextVideo();
     } else if (dragOffset > 40) {
@@ -149,19 +148,16 @@ export default function OurWorkSection() {
       <div
         className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none px-2"
         style={{ perspective: "1000px" }}
-        // Mouse Drag Handlers
         onMouseDown={(e) => handleDragStart(e.clientX)}
         onMouseMove={(e) => handleDragMove(e.clientX)}
         onMouseUp={handleDragEnd}
         onMouseLeave={handleDragEnd}
-        // Finger Touch Swipe Handlers for Mobile & Tablet
         onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
         onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
         onTouchEnd={handleDragEnd}
       >
         <div className="relative w-full max-w-[1280px] h-full flex items-center justify-center">
           {worksList.map((item, index) => {
-            // Calculate relative position offset from activeIndex
             let offset = index - activeIndex;
             if (offset > worksList.length / 2) offset -= worksList.length;
             if (offset < -worksList.length / 2) offset += worksList.length;
@@ -194,7 +190,7 @@ export default function OurWorkSection() {
   );
 }
 
-{/* Individual Panoramic Video Card Component */}
+{/* Individual Video Card Component */}
 function WorkCard({
   item,
   offset,
@@ -206,69 +202,34 @@ function WorkCard({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isCenter = offset === 0;
-  const [isInView, setIsInView] = useState(false);
 
-  // Check if section/video is currently in viewport
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-      },
-      { threshold: 0.2 }
-    );
-
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  // Control Play/Pause: Only play when in center AND in viewport
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isCenter && isInView) {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay policy fallback
-        });
-      }
-    } else {
-      video.pause();
-    }
-  }, [isCenter, isInView]);
-
-  // Click / Tap Handler (Ensures playing on mobile devices)
-  const handleCardClick = () => {
-    onClick();
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  };
-
-  // Sound Control on Mouse Hover
+  // Pure Hover-Only Handlers
   const handleMouseEnter = () => {
-    if (videoRef.current && isCenter) {
-      videoRef.current.muted = false; // Audio ON on Hover
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {
+        if (videoRef.current) {
+          videoRef.current.muted = true;
+          videoRef.current.play().catch(() => {});
+        }
+      });
     }
   };
 
   const handleMouseLeave = () => {
     if (videoRef.current) {
-      videoRef.current.muted = true; // Audio MUTE when mouse leaves
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = true;
     }
   };
 
-  // Dynamic Panoramic Arc Transforms
+  const handleCardClick = () => {
+    onClick();
+  };
+
   const getCardStyle = (): React.CSSProperties => {
     if (offset === 0) {
-      // Center Main Card (Focused & Elevated)
       return {
         transform: "translateX(0%) scale(1) translateZ(0px) rotateY(0deg)",
         zIndex: 30,
@@ -276,7 +237,6 @@ function WorkCard({
         filter: "brightness(100%)",
       };
     } else if (offset === 1) {
-      // Immediate Right Video
       return {
         transform: "translateX(62%) scale(0.82) translateZ(-120px) rotateY(-22deg)",
         zIndex: 20,
@@ -284,7 +244,6 @@ function WorkCard({
         filter: "brightness(75%)",
       };
     } else if (offset === -1) {
-      // Immediate Left Video
       return {
         transform: "translateX(-62%) scale(0.82) translateZ(-120px) rotateY(22deg)",
         zIndex: 20,
@@ -292,7 +251,6 @@ function WorkCard({
         filter: "brightness(75%)",
       };
     } else if (offset === 2) {
-      // Outer Right Video
       return {
         transform: "translateX(110%) scale(0.68) translateZ(-250px) rotateY(-35deg)",
         zIndex: 10,
@@ -300,7 +258,6 @@ function WorkCard({
         filter: "brightness(50%)",
       };
     } else if (offset === -2) {
-      // Outer Left Video
       return {
         transform: "translateX(-110%) scale(0.68) translateZ(-250px) rotateY(35deg)",
         zIndex: 10,
@@ -308,7 +265,6 @@ function WorkCard({
         filter: "brightness(50%)",
       };
     } else {
-      // Hidden Back Cards
       return {
         transform:
           offset > 0
@@ -340,29 +296,23 @@ function WorkCard({
             : "hover:opacity-100"
         }`}
       >
-        {/* Scalable Curved Frame Container */}
         <div className="relative w-full h-full">
-          {/* Curved Clip-Path Container */}
           <div
             className="relative w-full h-full bg-[#0a0514] overflow-hidden"
             style={{ clipPath: "url(#curvedScreenClip)" }}
           >
-            {/* Continuous Video */}
             <video
               ref={videoRef}
               src={item.video}
               loop
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
               className="w-full h-full object-cover scale-105 pointer-events-none"
             />
-
-            {/* Screen Glass Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/60 pointer-events-none" />
           </div>
 
-          {/* Curved Border SVG Overlay */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-20"
             viewBox="0 0 1000 562.5"

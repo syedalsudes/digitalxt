@@ -199,41 +199,41 @@ export default function CustomVideoEditingPage() {
     <div ref={pageRef} className="w-full bg-[#06030a] text-white min-h-screen selection:bg-purple-600 selection:text-white overflow-hidden">
       
       {/* Background Glow */}
-      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] h-[400px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
+      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] 2xl:w-[1400px] h-[400px] 2xl:h-[600px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
-      {/* ================= HERO SECTION ================= */}
-      <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 px-4 sm:px-6 max-w-7xl mx-auto">
+      {/* ================= HERO SECTION (SCALED FOR ULTRA-WIDE) ================= */}
+      <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 2xl:pt-56 2xl:pb-32 px-4 sm:px-6 max-w-7xl 2xl:max-w-[1700px] mx-auto">
         <div
           ref={headerRef}
-          className={`z-10 text-center max-w-5xl mx-auto px-4 ${cinzel.className}`}
+          className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto px-4 ${cinzel.className}`}
         >
           {/* Badge */}
           <div className="flex items-center justify-center gap-3 mb-6 sm:mb-8 font-sans">
-            <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-r from-transparent to-purple-400/60" />
-            <p className="text-xs sm:text-sm md:text-base uppercase tracking-[0.35em] sm:tracking-[0.45em] text-purple-300/80 font-bold">
+            <span className="w-8 sm:w-14 2xl:w-20 h-[1px] bg-gradient-to-r from-transparent to-purple-400/60" />
+            <p className="text-xs sm:text-sm md:text-base 2xl:text-xl uppercase tracking-[0.35em] sm:tracking-[0.45em] text-purple-300/80 font-bold">
               PREMIUM POST-PRODUCTION
             </p>
-            <span className="w-8 sm:w-14 h-[1px] bg-gradient-to-l from-transparent to-purple-400/60" />
+            <span className="w-8 sm:w-14 2xl:w-20 h-[1px] bg-gradient-to-l from-transparent to-purple-400/60" />
           </div>
 
           {/* MAIN HEADLINE */}
-          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[90px] font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl leading-[1.08] my-4">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[90px] 2xl:text-[120px] font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl leading-[1.08] my-4">
             CUSTOM VIDEO EDITING
           </h1>
 
           {/* DESCRIPTION */}
-          <p className="font-sans text-slate-200 text-sm sm:text-base md:text-lg lg:text-xl mt-8 sm:mt-10 font-normal tracking-wide max-w-3xl mx-auto leading-relaxed drop-shadow-sm">
+          <p className="font-sans text-slate-200 text-sm sm:text-base md:text-lg lg:text-xl 2xl:text-2xl mt-8 sm:mt-10 2xl:mt-12 font-normal tracking-wide max-w-3xl 2xl:max-w-5xl mx-auto leading-relaxed drop-shadow-sm">
             High-converting short-form reels, cinematic YouTube edits, and custom post-production workflows tailored for brands, creators, and digital agencies.
           </p>
 
           {/* Action Buttons */}
-          <div className="mt-10 sm:mt-12 lg:mt-14 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto px-4 sm:px-0 font-sans">
+          <div className="mt-10 sm:mt-12 lg:mt-14 2xl:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto px-4 sm:px-0 font-sans">
             <Link
               href="/#book-call"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-7 sm:px-9 lg:px-10 py-3.5 sm:py-4 lg:py-4.5 text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-purple-500/30"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-7 sm:px-9 lg:px-10 2xl:px-14 py-3.5 sm:py-4 lg:py-4.5 2xl:py-6 text-xs sm:text-sm lg:text-base 2xl:text-xl font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-purple-500/30"
             >
               <span>Book a Call</span>
-              <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
+              <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 2xl:w-7 2xl:h-7" />
             </Link>
 
             <div className="relative group/btn w-full sm:w-auto">
@@ -241,32 +241,32 @@ export default function CustomVideoEditingPage() {
               <Link
                 href="/"
                 target="_blank"
-                className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 sm:px-9 lg:px-10 py-3.5 sm:py-4 lg:py-4.5 rounded-full text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
+                className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 sm:px-9 lg:px-10 2xl:px-14 py-3.5 sm:py-4 lg:py-4.5 2xl:py-6 rounded-full text-xs sm:text-sm lg:text-base 2xl:text-xl font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
                 <span className="relative z-10">WhatsApp Us</span>
-                <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+                <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 2xl:w-7 2xl:h-7 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
               </Link>
             </div>
           </div>
         </div>
 
         {/* HERO FEATURES BAR */}
-        <div className="w-full max-w-7xl mx-auto mt-16 md:mt-24 px-2 sm:px-4 fade-up z-10">
-          <div className="w-full py-6 px-5 sm:px-8 rounded-2xl md:rounded-full bg-[#0e0720]/90 border border-purple-400/40 backdrop-blur-xl shadow-[0_0_35px_rgba(168,85,247,0.2)]">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-6 items-center justify-center">
+        <div className="w-full max-w-7xl 2xl:max-w-[1700px] mx-auto mt-16 md:mt-24 2xl:mt-32 px-2 sm:px-4 fade-up z-10">
+          <div className="w-full py-6 2xl:py-10 px-5 sm:px-8 2xl:px-12 rounded-2xl md:rounded-full bg-[#0e0720]/90 border border-purple-400/40 backdrop-blur-xl shadow-[0_0_35px_rgba(168,85,247,0.2)]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-6 2xl:gap-x-10 items-center justify-center">
               {heroFeatures.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <div key={index} className="flex items-center gap-3 justify-start sm:justify-center">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-950/90 border border-purple-400/60 flex items-center justify-center text-purple-200 shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.3)]">
-                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.2]" />
+                  <div key={index} className="flex items-center gap-3 2xl:gap-4 justify-start sm:justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 2xl:w-14 2xl:h-14 rounded-xl 2xl:rounded-2xl bg-purple-950/90 border border-purple-400/60 flex items-center justify-center text-purple-200 shrink-0 shadow-[0_0_12px_rgba(168,85,247,0.3)]">
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 2xl:w-7 2xl:h-7 stroke-[2.2]" />
                     </div>
                     <div className="text-left font-sans whitespace-nowrap">
-                      <strong className="block text-white font-extrabold text-xs sm:text-sm lg:text-[15px] leading-tight tracking-wide">
+                      <strong className="block text-white font-extrabold text-xs sm:text-sm lg:text-[15px] 2xl:text-lg leading-tight tracking-wide">
                         {item.title}
                       </strong>
-                      <span className="text-[11px] sm:text-xs text-purple-200/90 font-medium">
+                      <span className="text-[11px] sm:text-xs 2xl:text-sm text-purple-200/90 font-medium">
                         {item.desc}
                       </span>
                     </div>
@@ -278,13 +278,13 @@ export default function CustomVideoEditingPage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK GRID SECTION ================= */}
+      {/* ================= OUR WORK GRID SECTION (SCALED) ================= */}
       <WorkGridSection />
 
-      {/* ================= PACKAGES SECTION (SHORT & LONG FORM) ================= */}
+      {/* ================= PACKAGES SECTION (SHORT & LONG FORM - SCALED) ================= */}
       <PricingPackagesSection />
 
-      {/* ================= WHITE LABELING FOR AGENCIES ================= */}
+      {/* ================= WHITE LABELING FOR AGENCIES (SCALED) ================= */}
       <WhiteLabelAgencySection />
 
     </div>
@@ -295,7 +295,7 @@ export default function CustomVideoEditingPage() {
 
 function WorkGridSection() {
   return (
-    <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 border-t border-purple-950/40 overflow-hidden">
+    <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
       
       <Image
         src="/servicesvid.png"
@@ -305,17 +305,17 @@ function WorkGridSection() {
         className="object-cover object-center z-0 pointer-events-none opacity-30 blur-sm"
       />
 
-      <div className={`z-10 text-center max-w-5xl mx-auto mb-12 sm:mb-16 px-4 ${cinzel.className}`}>
-        <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-3">
+      <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
+        <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-3">
           FEATURED SHOWREEL
         </p>
-        <h2 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
+        <h2 className="text-3xl sm:text-5xl md:text-7xl 2xl:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
           OUR WORK
         </h2>
       </div>
 
-      <div className="max-w-[1500px] mx-auto w-full px-4 sm:px-6 lg:px-8 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      <div className="max-w-[1500px] 2xl:max-w-[2000px] mx-auto w-full px-4 sm:px-6 lg:px-8 z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
           {worksList.map((item) => (
             <WorkGridCard key={item.id} item={item} />
           ))}
@@ -355,7 +355,7 @@ function WorkGridCard({ item }: { item: { id: number; video: string } }) {
     <div
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
+      className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl 2xl:rounded-3xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
     >
       <video
         ref={videoRef}
@@ -369,7 +369,7 @@ function WorkGridCard({ item }: { item: { id: number; video: string } }) {
   );
 }
 
-/* ================= PRICING CARD COMPONENT ================= */
+/* ================= PRICING CARD COMPONENT (SCALED) ================= */
 
 function PricingCard({ plan }: { plan: PricingPlan }) {
   const [rotateX, setRotateX] = useState(0);
@@ -417,7 +417,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       style={{
         transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
       }}
-      className={`pricing-card-inner group relative p-[1.5px] transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] shrink-0 lg:hover:scale-105 lg:hover:z-50 ${
+      className={`pricing-card-inner group relative p-[1.5px] transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] 2xl:max-w-[420px] shrink-0 lg:hover:scale-105 lg:hover:z-50 ${
         plan.isPopular ? "z-20" : "z-10"
       }`}
     >
@@ -431,7 +431,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       />
 
       <div
-        className={`relative flex flex-col justify-between p-6 sm:p-7 h-full w-full backdrop-blur-xl ${
+        className={`relative flex flex-col justify-between p-6 sm:p-7 2xl:p-10 h-full w-full backdrop-blur-xl ${
           plan.isPopular ? "bg-[#120723]/95" : "bg-[#0a0512]/95"
         }`}
         style={{ clipPath: currentClipPath }}
@@ -443,11 +443,11 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           }}
         />
 
-        <div className="absolute top-0 right-10 w-12 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
+        <div className="absolute top-0 right-10 w-12 2xl:w-20 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
 
-        <div className="flex items-center justify-between mb-3 z-10">
+        <div className="flex items-center justify-between mb-3 2xl:mb-5 z-10">
           <span
-            className={`text-[10px] font-bold tracking-[0.25em] uppercase px-3 py-1 border ${
+            className={`text-[10px] 2xl:text-xs font-bold tracking-[0.25em] uppercase px-3 2xl:px-4 py-1 2xl:py-1.5 border ${
               plan.isPopular
                 ? "bg-purple-600/30 border-purple-400 text-purple-200"
                 : "bg-white/5 border-white/10 text-gray-400"
@@ -460,45 +460,45 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           </span>
         </div>
 
-        <div className="mb-4 z-10">
-          <h3 className={`text-lg sm:text-xl font-bold text-white mb-1 ${cinzel.className}`}>
+        <div className="mb-4 2xl:mb-6 z-10">
+          <h3 className={`text-lg sm:text-xl 2xl:text-2xl font-bold text-white mb-1 ${cinzel.className}`}>
             {plan.videosCount}
           </h3>
 
-          <div className="flex items-baseline gap-2 my-1">
-            <span className="text-xs text-purple-300/60 line-through font-mono">
+          <div className="flex items-baseline gap-2 my-1 2xl:my-3">
+            <span className="text-xs 2xl:text-sm text-purple-300/60 line-through font-mono">
               {plan.originalPrice}
             </span>
-            <span className={`text-3xl sm:text-4xl font-black text-white ${cinzel.className}`}>
+            <span className={`text-3xl sm:text-4xl 2xl:text-5xl font-black text-white ${cinzel.className}`}>
               {plan.price}
             </span>
-            <span className="text-xs text-purple-300/80 font-mono font-medium">
+            <span className="text-xs 2xl:text-sm text-purple-300/80 font-mono font-medium">
               ({plan.perVideoPrice})
             </span>
           </div>
 
-          <p className="text-xs text-gray-400 leading-relaxed font-light min-h-[36px]">
+          <p className="text-xs 2xl:text-sm text-gray-400 leading-relaxed font-light min-h-[36px] 2xl:min-h-[44px]">
             {plan.description}
           </p>
         </div>
 
-        <div className="flex-1 mb-5 z-10">
-          <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-4" />
-          <ul className="space-y-2.5">
+        <div className="flex-1 mb-5 2xl:mb-8 z-10">
+          <div className="w-full h-[1px] bg-gradient-to-r from-purple-500/50 via-white/10 to-transparent mb-4 2xl:mb-6" />
+          <ul className="space-y-2.5 2xl:space-y-4">
             {plan.features.map((feature, idx) => (
               <li
                 key={idx}
-                className="flex items-center gap-2 text-xs font-light lg:group-hover:translate-x-1 transition-transform duration-300"
+                className="flex items-center gap-2 2xl:gap-3 text-xs 2xl:text-sm font-light lg:group-hover:translate-x-1 transition-transform duration-300"
               >
                 <div
-                  className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                  className={`w-4 h-4 2xl:w-5 2xl:h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                     feature.included
                       ? "bg-purple-950/80 border-purple-500/50 group-hover:bg-purple-600 group-hover:border-purple-400"
                       : "bg-white/5 border-white/10 opacity-40"
                   }`}
                 >
                   <Check
-                    className={`w-2.5 h-2.5 stroke-[3] ${
+                    className={`w-2.5 h-2.5 2xl:w-3.5 2xl:h-3.5 stroke-[3] ${
                       feature.included ? "text-purple-300 group-hover:text-white" : "text-gray-500"
                     }`}
                   />
@@ -514,7 +514,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
         <div className="flex flex-col gap-2 mt-auto z-10">
           <Link
             href="/#book-call"
-            className={`w-full py-3 px-4 text-[11px] font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
+            className={`w-full py-3 2xl:py-4 px-4 text-[11px] 2xl:text-sm font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 ${
               plan.isPopular
                 ? "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
                 : "bg-white text-purple-950 hover:bg-gray-100"
@@ -523,46 +523,46 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
               clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)",
             }}
           >
-            <Zap className="w-3.5 h-3.5 fill-current" />
+            <Zap className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 fill-current" />
             <span>Order Video</span>
           </Link>
         </div>
 
-        <div className="absolute bottom-0 left-10 w-12 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
+        <div className="absolute bottom-0 left-10 w-12 2xl:w-20 h-[2px] bg-purple-500/50 group-hover:bg-purple-400 group-hover:shadow-[0_0_8px_#a855f7] transition-all" />
       </div>
     </div>
   );
 }
 
-/* ================= PRICING PACKAGES SECTION ================= */
+/* ================= PRICING PACKAGES SECTION (SCALED) ================= */
 
 function PricingPackagesSection() {
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
 
   return (
-    <section className="relative w-full bg-[#06030a] text-white border-t border-purple-950/40 overflow-hidden flex flex-col justify-start pt-16 pb-20 md:pt-24 md:pb-32">
-      <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center shrink-0 px-4 mb-10 lg:mb-16 ${cinzel.className}`}>
-        <p className="text-xs sm:text-sm uppercase tracking-[0.25em] md:tracking-[0.4em] text-purple-300/60 mb-3">
+    <section className="relative w-full bg-[#06030a] text-white border-t border-purple-950/40 overflow-hidden flex flex-col justify-start pt-16 pb-20 md:pt-24 md:pb-32 2xl:pt-36 2xl:pb-44">
+      <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 px-4 mb-10 lg:mb-16 2xl:mb-20 ${cinzel.className}`}>
+        <p className="text-xs sm:text-sm 2xl:text-lg uppercase tracking-[0.25em] md:tracking-[0.4em] text-purple-300/60 mb-3">
           Flexible Options
         </p>
-        <h2 className="text-2xl sm:text-4xl lg:text-6xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+        <h2 className="text-2xl sm:text-4xl lg:text-6xl 2xl:text-7xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
           Packages
         </h2>
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 space-y-16">
+      <div className="relative z-10 w-full max-w-6xl 2xl:max-w-[1600px] mx-auto px-4 space-y-16 2xl:space-y-24">
         
         {/* CATEGORY 1: SHORT-FORM CONTENT */}
         <div>
-          <div className="flex items-center gap-3 mb-8 justify-center">
-            <Video className="w-5 h-5 text-purple-400" />
-            <h3 className={`text-xl sm:text-2xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
+          <div className="flex items-center gap-3 2xl:gap-4 mb-8 2xl:mb-12 justify-center">
+            <Video className="w-5 h-5 2xl:w-7 2xl:h-7 text-purple-400" />
+            <h3 className={`text-xl sm:text-2xl 2xl:text-3xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
               Short-Form Packages (Reels / Shorts)
             </h3>
           </div>
           <div
             ref={cardsWrapperRef}
-            className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
+            className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 2xl:gap-10 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
           >
             {shortFormPlans.map((plan) => (
               <div key={plan.id} className="snap-center shrink-0 flex justify-center">
@@ -574,13 +574,13 @@ function PricingPackagesSection() {
 
         {/* CATEGORY 2: LONG-FORM CONTENT */}
         <div>
-          <div className="flex items-center gap-3 mb-8 justify-center">
-            <Film className="w-5 h-5 text-purple-400" />
-            <h3 className={`text-xl sm:text-2xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
+          <div className="flex items-center gap-3 2xl:gap-4 mb-8 2xl:mb-12 justify-center">
+            <Film className="w-5 h-5 2xl:w-7 2xl:h-7 text-purple-400" />
+            <h3 className={`text-xl sm:text-2xl 2xl:text-3xl font-extrabold uppercase text-white tracking-wider ${cinzel.className}`}>
               Long-Form Packages (YouTube / Vlogs)
             </h3>
           </div>
-          <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0">
+          <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 2xl:gap-10 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0">
             {longFormPlans.map((plan) => (
               <div key={plan.id} className="snap-center shrink-0 flex justify-center">
                 <PricingCard plan={plan} />
@@ -590,18 +590,18 @@ function PricingPackagesSection() {
         </div>
 
         {/* ACTION BUTTONS BELOW PACKAGES */}
-        <div className="max-w-4xl mx-auto pt-8 px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
+        <div className="max-w-4xl 2xl:max-w-6xl mx-auto pt-8 2xl:pt-12 px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 2xl:gap-8">
           
           {/* Book A Call */}
           <div className="shrink-0 relative group/btn w-full sm:w-auto">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
             <Link
               href="/#book-call"
-              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/40 bg-[#120824]/90 shadow-[0_0_25px_rgba(168,85,247,0.25)]"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 2xl:px-14 py-4 2xl:py-6 rounded-full text-xs sm:text-sm 2xl:text-lg font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/40 bg-[#120824]/90 shadow-[0_0_25px_rgba(168,85,247,0.25)]"
             >
-              <PhoneCall className="relative z-10 w-4 h-4 text-purple-400" />
+              <PhoneCall className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 text-purple-400" />
               <span className="relative z-10">Book A Call</span>
-              <ArrowUpRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+              <ArrowUpRight className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
             </Link>
           </div>
 
@@ -610,11 +610,11 @@ function PricingPackagesSection() {
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 opacity-30 blur-md group-hover/btn:opacity-70 transition-opacity duration-300" />
             <Link
               href="/#book-call"
-              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 py-4 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-purple-950/60"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 2xl:px-14 py-4 2xl:py-6 rounded-full text-xs sm:text-sm 2xl:text-lg font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-purple-950/60"
             >
-              <MessageSquarePlus className="relative z-10 w-4 h-4 text-purple-300" />
+              <MessageSquarePlus className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 text-purple-300" />
               <span className="relative z-10">Get Custom Quote</span>
-              <ArrowUpRight className="relative z-10 w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+              <ArrowUpRight className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
             </Link>
           </div>
 
@@ -624,7 +624,7 @@ function PricingPackagesSection() {
   );
 }
 
-/* ================= WHITE LABELING FOR AGENCIES ================= */
+/* ================= WHITE LABELING FOR AGENCIES (SCALED) ================= */
 
 function WhiteLabelAgencySection() {
   const agencyFeatures = [
@@ -646,11 +646,11 @@ function WhiteLabelAgencySection() {
   ];
 
   return (
-    <section className="relative w-full bg-[#06030a] text-white py-20 sm:py-28 border-t border-purple-950/40 overflow-hidden">
+    <section className="relative w-full bg-[#06030a] text-white py-20 sm:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] 2xl:w-[1000px] h-[350px] 2xl:h-[500px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+      <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 relative z-10">
         {/* Main Card Container */}
         <div className="group relative p-[1.5px] transition-all duration-500">
           
@@ -662,54 +662,54 @@ function WhiteLabelAgencySection() {
 
           {/* Card Content Inner */}
           <div 
-            className="relative p-8 sm:p-12 bg-[#0d061c]/95 backdrop-blur-2xl flex flex-col justify-between h-full w-full"
+            className="relative p-8 sm:p-12 2xl:p-16 bg-[#0d061c]/95 backdrop-blur-2xl flex flex-col justify-between h-full w-full"
             style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
           >
             {/* Top Accent Line */}
-            <div className="absolute top-0 right-16 w-20 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
+            <div className="absolute top-0 right-16 w-20 2xl:w-28 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
 
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-purple-500/20">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 2xl:mb-14 pb-8 2xl:pb-12 border-b border-purple-500/20">
               <div className="text-left">
                 <span 
-                  className="inline-flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] uppercase px-3.5 py-1.5 border bg-purple-600/30 border-purple-400 text-purple-200 mb-3"
+                  className="inline-flex items-center gap-2 text-[10px] 2xl:text-xs font-bold tracking-[0.25em] uppercase px-3.5 2xl:px-5 py-1.5 2xl:py-2 border bg-purple-600/30 border-purple-400 text-purple-200 mb-3"
                   style={{ clipPath: "polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px))" }}
                 >
-                  <House className="w-3.5 h-3.5 text-purple-300" />
+                  <House className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-purple-300" />
                   AGENCY OUTSOURCING
                 </span>
 
-                <h3 className={`text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-wider ${cinzel.className}`}>
+                <h3 className={`text-2xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-black text-white uppercase tracking-wider ${cinzel.className}`}>
                   White Label Video Editing
                 </h3>
               </div>
 
               <Link
                 href="/#book-call"
-                className="shrink-0 py-3.5 px-8 text-xs font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
+                className="shrink-0 py-3.5 2xl:py-5 px-8 2xl:px-12 text-xs 2xl:text-base font-bold uppercase tracking-wider transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 via-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 hover:shadow-purple-500/50"
                 style={{ clipPath: "polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)" }}
               >
-                <Zap className="w-4 h-4 fill-current" />
+                <Zap className="w-4 h-4 2xl:w-5 2xl:h-5 fill-current" />
                 <span>Partner With Us</span>
               </Link>
             </div>
 
             {/* Features 3-Column Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 2xl:gap-10">
               {agencyFeatures.map((item, idx) => {
                 const Icon = item.icon;
                 return (
                   <div 
                     key={idx}
-                    className="p-5 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 transition-all duration-300 group/feature"
+                    className="p-5 2xl:p-8 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/50 hover:bg-white/10 transition-all duration-300 group/feature"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-purple-950/80 border border-purple-500/50 flex items-center justify-center text-purple-300 mb-4 group-hover/feature:bg-purple-600 group-hover/feature:text-white transition-colors">
-                      <Icon className="w-5 h-5 stroke-[2]" />
+                    <div className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-lg 2xl:rounded-xl bg-purple-950/80 border border-purple-500/50 flex items-center justify-center text-purple-300 mb-4 2xl:mb-6 group-hover/feature:bg-purple-600 group-hover/feature:text-white transition-colors">
+                      <Icon className="w-5 h-5 2xl:w-7 2xl:h-7 stroke-[2]" />
                     </div>
-                    <h4 className="text-white font-bold text-sm sm:text-base mb-1.5 tracking-wide">
+                    <h4 className="text-white font-bold text-sm sm:text-base 2xl:text-xl mb-1.5 2xl:mb-3 tracking-wide">
                       {item.title}
                     </h4>
-                    <p className="text-gray-400 text-xs font-light leading-relaxed">
+                    <p className="text-gray-400 text-xs 2xl:text-sm font-light leading-relaxed">
                       {item.desc}
                     </p>
                   </div>
@@ -718,7 +718,7 @@ function WhiteLabelAgencySection() {
             </div>
 
             {/* Bottom Accent Line */}
-            <div className="absolute bottom-0 left-16 w-20 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
+            <div className="absolute bottom-0 left-16 w-20 2xl:w-28 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
           </div>
 
         </div>
