@@ -7,13 +7,13 @@ import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { motion, PanInfo } from "framer-motion";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
   weight: ["700"],
 });
 
-// Dynamic Video List
 const worksList = [
   { id: 1, video: "/videos/ourwork/workvid1.mp4" },
   { id: 2, video: "/videos/ourwork/workvid2.mp4" },
@@ -29,13 +29,7 @@ export default function OurWorkSection() {
   const headerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  // Active Center Video Index
   const [activeIndex, setActiveIndex] = useState(1);
-
-  // Drag / Swipe Tracking States
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [dragOffset, setDragOffset] = useState(0);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -80,7 +74,6 @@ export default function OurWorkSection() {
     };
   }, []);
 
-  // Navigation Logic
   const nextVideo = () => {
     setActiveIndex((prev) => (prev + 1) % worksList.length);
   };
@@ -89,29 +82,16 @@ export default function OurWorkSection() {
     setActiveIndex((prev) => (prev - 1 + worksList.length) % worksList.length);
   };
 
-  // Drag / Touch Event Handlers
-  const handleDragStart = (clientX: number) => {
-    setIsDragging(true);
-    setStartX(clientX);
-    setDragOffset(0);
-  };
+  // Ultra-Smooth Drag End Handler
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    const swipeThreshold = 50;
+    const velocityThreshold = 300;
 
-  const handleDragMove = (clientX: number) => {
-    if (!isDragging) return;
-    const diff = clientX - startX;
-    setDragOffset(diff);
-  };
-
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-
-    if (dragOffset < -40) {
+    if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
       nextVideo();
-    } else if (dragOffset > 40) {
+    } else if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
       prevVideo();
     }
-    setDragOffset(0);
   };
 
   return (
@@ -145,16 +125,13 @@ export default function OurWorkSection() {
       </div>
 
       {/* PANORAMIC CURVED DECK CAROUSEL */}
-      <div
-        className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing touch-none px-2"
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+        className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing px-2 select-none"
         style={{ perspective: "1000px" }}
-        onMouseDown={(e) => handleDragStart(e.clientX)}
-        onMouseMove={(e) => handleDragMove(e.clientX)}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
-        onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-        onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-        onTouchEnd={handleDragEnd}
       >
         <div className="relative w-full max-w-[1280px] h-full flex items-center justify-center">
           {worksList.map((item, index) => {
@@ -172,7 +149,7 @@ export default function OurWorkSection() {
             );
           })}
         </div>
-      </div>
+      </motion.div>
 
       {/* Action Button */}
       <div ref={buttonRef} className="z-10 mt-10 sm:mt-14 md:mt-20 shrink-0 relative group/btn px-4">
@@ -203,7 +180,6 @@ function WorkCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const isCenter = offset === 0;
 
-  // Pure Hover-Only Handlers
   const handleMouseEnter = () => {
     if (videoRef.current) {
       videoRef.current.muted = false;
@@ -222,10 +198,6 @@ function WorkCard({
       videoRef.current.currentTime = 0;
       videoRef.current.muted = true;
     }
-  };
-
-  const handleCardClick = () => {
-    onClick();
   };
 
   const getCardStyle = (): React.CSSProperties => {
@@ -279,7 +251,7 @@ function WorkCard({
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className="absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform"

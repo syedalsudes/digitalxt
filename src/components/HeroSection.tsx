@@ -51,7 +51,6 @@ function getCardStyle(offset: number): React.CSSProperties {
     };
   }
 
-  // Slightly increased offset for wider cards on desktop
   const x = offset * 112;
   const y = abs === 0 ? 0 : 35 + abs * 24;
   const scale = abs === 0 ? 1.05 : 1 - abs * 0.06;
@@ -74,7 +73,7 @@ export default function HeroSection() {
   const descRef = useRef<HTMLParagraphElement>(null);
   const btnRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<HTMLDivElement>(null);
-  
+
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const centerCardRef = useRef<HTMLDivElement>(null);
 
@@ -88,19 +87,23 @@ export default function HeroSection() {
     if (container && centerCard) {
       const scrollPos =
         centerCard.offsetLeft - container.clientWidth / 2 + centerCard.clientWidth / 2;
-      container.scrollTo({ left: scrollPos, behavior: 'instant' });
+      container.scrollTo({ left: scrollPos, behavior: "smooth" });
     }
   };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollToCenterCard();
-    }, 50);
+    }, 150);
 
-    window.addEventListener("resize", scrollToCenterCard);
+    const handleResize = () => {
+      scrollToCenterCard();
+    };
+
+    window.addEventListener("resize", handleResize);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("resize", scrollToCenterCard);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -133,7 +136,7 @@ export default function HeroSection() {
       }
 
       if (deckRef.current) {
-        gsap.set(deckRef.current, { opacity: 0, y: 100, scale: 0.95 });
+        gsap.set(deckRef.current, { opacity: 0, y: 60, scale: 0.98 });
       }
 
       if (textTargets.length > 0) {
@@ -152,8 +155,8 @@ export default function HeroSection() {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 1,
-            ease: "back.out(1.1)",
+            duration: 0.9,
+            ease: "power2.out",
           },
           "-=0.4"
         );
@@ -175,78 +178,77 @@ export default function HeroSection() {
   return (
     <main
       ref={mainRef}
-      className="relative w-full min-h-screen pt-28 sm:pt-36 md:pt-40 lg:pt-44 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-16 2xl:pb-24 selection:bg-purple-500/30"
+      className="relative w-full min-h-screen pt-20 sm:pt-32 md:pt-40 lg:pt-44 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-12 sm:pb-16 2xl:pb-24 selection:bg-purple-500/30"
     >
-      {/* Background Ambient Glows scaled up for big displays */}
+      {/* Background Ambient Glows */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[-5%] h-[400px] sm:h-[500px] 2xl:h-[700px] w-[90vw] max-w-[1400px] -translate-x-1/2 rounded-full opacity-20 blur-[120px] sm:blur-[160px]"
+        className="pointer-events-none absolute left-1/2 top-[-5%] h-[350px] sm:h-[500px] 2xl:h-[700px] w-[90vw] max-w-[1400px] -translate-x-1/2 rounded-full opacity-20 blur-[100px] sm:blur-[160px]"
         style={{
           background: "radial-gradient(circle, rgba(168,85,247,0.8) 0%, rgba(6,3,10,0) 70%)",
         }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[35%] h-[300px] sm:h-[400px] 2xl:h-[600px] w-[80vw] max-w-[1100px] -translate-x-1/2 rounded-full opacity-15 blur-[100px] sm:blur-[140px]"
+        className="pointer-events-none absolute left-1/2 top-[35%] h-[250px] sm:h-[400px] 2xl:h-[600px] w-[80vw] max-w-[1100px] -translate-x-1/2 rounded-full opacity-15 blur-[90px] sm:blur-[140px]"
         style={{
           background: "radial-gradient(circle, rgba(192,38,211,0.6) 0%, rgba(6,3,10,0) 70%)",
         }}
       />
 
       {/* Main Content Area */}
-<div className="relative z-20 flex w-full max-w-7xl 2xl:max-w-[1600px] flex-col items-center justify-center text-center px-3 sm:px-6 mb-8 sm:mb-12 lg:mb-16">
-  
-  {/* Smart Single Line Auto-Shrinking Heading */}
-  <div className="w-full max-w-full overflow-hidden flex justify-center items-center px-1">
-    <h1
-      ref={titleRef}
-      className={`font-black tracking-normal sm:tracking-wider uppercase whitespace-nowrap text-[4.8vw] sm:text-3xl md:text-4xl lg:text-5xl xl:text-5xl 2xl:text-6xl ${cinzel.className}`}
-      style={{
-        fontSize: "clamp(0.95rem, 4.6vw, 3.75rem)"
-      }}
-    >
-      Elevate Your Brand's Videos
-    </h1>
-  </div>
+      <div className="relative z-20 flex w-full max-w-7xl 2xl:max-w-[1600px] flex-col items-center justify-center text-center px-4 sm:px-6 mb-6 sm:mb-10 lg:mb-16">
 
-  {/* Description */}
-  <p
-    ref={descRef}
-    className="mt-3 sm:mt-5 lg:mt-6 max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl text-[11px] sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-300/85 font-light px-2"
-  >
-    High-impact video editing, motion graphics, and sound design. We turn your raw footage into captivating visual stories that drive real engagement.
-  </p>
+        {/* Responsive Header Wrapper */}
+        <div className="w-full max-w-full overflow-hidden flex justify-center items-center px-2">
+          <h1
+            ref={titleRef}
+            className={`font-black tracking-tight sm:tracking-normal lg:tracking-wider uppercase text-center lg:whitespace-nowrap bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent ${cinzel.className}`}
+            style={{
+              fontSize: "clamp(1.35rem, 4.2vw, 3.75rem)",
+              lineHeight: 1.2
+            }}
+          >
+            Elevate Your Brand's Videos
+          </h1>
+        </div>
 
-  {/* Action Buttons */}
-  <div
-    ref={btnRef}
-    className="mt-5 sm:mt-8 lg:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 lg:gap-5 w-full sm:w-auto px-4 sm:px-0"
-  >
-    {/* Book a Call Button */}
-    <Link
-      href="#book-call"
-      className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25"
-    >
-      <span>Book a Call</span>
-      <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
-    </Link>
+        {/* Description */}
+        <p
+          ref={descRef}
+          className="mt-3 sm:mt-5 lg:mt-6 max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-300/85 font-light px-2"
+        >
+          High-impact video editing, motion graphics, and sound design. We turn your raw footage into captivating visual stories that drive real engagement.
+        </p>
 
-    {/* WhatsApp Glow Button */}
-    <div className="relative group/btn w-full sm:w-auto">
-      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
-      <Link
-        href="https://wa.me/message/FGRAWQHXJE5IP1"
-        target="_blank"
-        className="relative w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 rounded-full text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
-      >
-        <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
-        <span className="relative z-10">WhatsApp Us</span>
-        <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
-      </Link>
-    </div>
-  </div>
+        {/* Action Buttons */}
+        <div
+          ref={btnRef}
+          className="mt-5 sm:mt-8 lg:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 lg:gap-5 w-full sm:w-auto px-4 sm:px-0"
+        >
+          <Link
+            href="#book-call"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25"
+          >
+            <span>Book a Call</span>
+            <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5" />
+          </Link>
 
-</div>
+          <div className="relative group/btn w-full sm:w-auto">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
+            <Link
+              href="https://wa.me/message/FGRAWQHXJE5IP1"
+              target="_blank"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 sm:px-7 lg:px-9 py-3 sm:py-3.5 lg:py-4 rounded-full text-xs sm:text-sm lg:text-base font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
+            >
+              <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
+              <span className="relative z-10">WhatsApp Us</span>
+              <ArrowUpRight className="relative z-10 w-4 h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Video Carousel Deck */}
       <section
         ref={deckRef}
@@ -254,7 +256,7 @@ export default function HeroSection() {
         aria-label="Cards Showcase"
         className="relative z-10 w-full outline-none"
       >
-        {/* DESKTOP VIEW (Scaled up for large screens) */}
+        {/* DESKTOP VIEW */}
         <div className="hidden lg:flex relative h-[480px] xl:h-[520px] 2xl:h-[620px] w-full items-end justify-center">
           {cards.map(({ item, index, offset }) => (
             <HeroCard
@@ -270,16 +272,16 @@ export default function HeroSection() {
           ))}
         </div>
 
-        {/* MOBILE & TABLET VIEW */}
+        {/* MOBILE & TABLET VIEW (Responsive Carousel) */}
         <div
           ref={mobileScrollRef}
-          className="flex lg:hidden w-full overflow-x-auto gap-4 sm:gap-6 py-4 scrollbar-none snap-x snap-mandatory items-center justify-start [scroll-padding-left:calc(50vw-105px)] sm:[scroll-padding-left:calc(50vw-130px)] px-[calc(50vw-105px)] sm:px-[calc(50vw-130px)]"
+          className="flex lg:hidden w-full overflow-x-auto gap-3 sm:gap-5 py-6 scrollbar-none snap-x snap-mandatory items-center justify-start touch-pan-x px-[calc(50vw-110px)] sm:px-[calc(50vw-150px)] md:px-[calc(50vw-180px)]"
         >
           {cards.map(({ item, index, offset }) => (
             <div
               key={item.id}
               ref={offset === 0 ? centerCardRef : null}
-              className="snap-center shrink-0"
+              className="snap-center shrink-0 flex items-center justify-center"
             >
               <HeroCard
                 item={item}
@@ -332,7 +334,7 @@ const HeroCard = memo(function HeroCard({
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           video.muted = true;
-          video.play().catch(() => {});
+          video.play().catch(() => { });
         });
       }
     } else {
@@ -354,19 +356,17 @@ const HeroCard = memo(function HeroCard({
       onMouseLeave={() => onHover(null)}
       aria-current={isCenter}
       tabIndex={isMobile || isVisible ? 0 : -1}
-      className={`${
-        isMobile
-          ? "relative aspect-[9/14] w-[210px] sm:w-[260px]"
+      className={`${isMobile
+          ? "relative aspect-[9/14] w-[210px] sm:w-[280px] md:w-[330px]"
           : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
-      } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none`}
+        } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none`}
       style={style}
     >
       <div
-        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${
-          isCenter
-            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_35px_rgba(168,85,247,0.45)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)]"
-            : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px]"
-        }`}
+        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${isCenter
+            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_30px_rgba(168,85,247,0.5)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)] scale-100"
+            : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px] opacity-80"
+          }`}
       >
         <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px]">
           <video
@@ -378,7 +378,7 @@ const HeroCard = memo(function HeroCard({
             preload="auto"
             className="h-full w-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
         </div>
       </div>
     </button>
