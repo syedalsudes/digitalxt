@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Loader from "@/components/Loader";
+import TawkChat from "@/components/TawkChat";
+import WhatsAppButton from "@/components/WhatsAppButton";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -17,7 +19,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-// Professional SEO & Branding Metadata for Digitalix Studios
+
 export const metadata: Metadata = {
   title: {
     default: "Digitalix Studios | Premium Video Production For Modern Brands",
@@ -90,6 +92,8 @@ export default function RootLayout({
         <Loader />
         <Navbar />
         {children}
+        <TawkChat />
+        <WhatsAppButton />
         <Footer />
       </body>
     </html>

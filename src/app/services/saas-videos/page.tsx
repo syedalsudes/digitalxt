@@ -185,7 +185,7 @@ export default function SaasLaunchVideoPage() {
             <div className="relative group/btn w-full sm:w-auto">
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
               <Link
-                href="/"
+                href="https://wa.me/message/FGRAWQHXJE5IP1"
                 target="_blank"
                 className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-7 sm:px-9 lg:px-10 2xl:px-14 py-3.5 sm:py-4 lg:py-4.5 2xl:py-6 rounded-full text-xs sm:text-sm lg:text-base 2xl:text-xl font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
               >

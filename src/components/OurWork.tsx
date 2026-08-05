@@ -117,7 +117,7 @@ export default function OurWorkSection() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-12 sm:py-16 md:py-24 overflow-hidden selection:bg-purple-500/30 select-none"
+      className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-12 sm:py-16 md:py-24 overflow-hidden selection:bg-purple-500/30"
     >
       {/* Curved Screen ClipPath Definition */}
       <svg className="absolute w-0 h-0 overflow-hidden" aria-hidden="true">

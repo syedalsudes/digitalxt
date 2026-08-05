@@ -92,7 +92,7 @@ export default function Navbar() {
         {/* BOOK A CALL BUTTON */}
         <div className="flex items-center shrink-0">
           <a
-            href="#booking"
+            href="/#book-call"
             className="group relative inline-flex items-center gap-1.5 sm:gap-3 2xl:gap-4 pl-3 sm:pl-6 2xl:pl-8 pr-1 sm:pr-2 2xl:pr-3 py-1.5 sm:py-2.5 2xl:py-3 rounded-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-600 text-white font-bold text-[9px] min-[380px]:text-[10px] sm:text-xs 2xl:text-sm 4xl:text-base uppercase tracking-wider shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 shrink-0"
           >
             <span className="whitespace-nowrap">Book A Call</span>
