@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
 import {
@@ -38,7 +38,6 @@ const heroFeatures = [
   { icon: Clock, title: "24-48hr Delivery", desc: "Per Video" },
 ];
 
-// 10 Videos Total
 const ourWorkList = [
   { id: 1, video: "/videos/ourwork/workvid1.mp4" },
   { id: 2, video: "/videos/ourwork/workvid2.mp4" },
@@ -52,7 +51,6 @@ const ourWorkList = [
   { id: 10, video: "/videos/ourwork/workvid2.mp4" },
 ];
 
-// 10 Videos Total
 const beforeAfterCards = [
   { id: "1", video: "/videos/review1.mp4" },
   { id: "2", video: "/videos/review2.mp4" },
@@ -137,12 +135,97 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
+// Custom Hook for Ultra-Smooth Inertial Dragging
+function useDraggableScroll<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let velX = 0;
+    let lastX = 0;
+    let reqId: number;
+
+    const stopMomentum = () => {
+      cancelAnimationFrame(reqId);
+    };
+
+    const momentumLoop = () => {
+      if (!el) return;
+      el.scrollLeft -= velX;
+      velX *= 0.95; // Friction Deceleration
+      if (Math.abs(velX) > 0.5) {
+        reqId = requestAnimationFrame(momentumLoop);
+      }
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      setIsDragging(false);
+      stopMomentum();
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+      lastX = e.pageX;
+      velX = 0;
+    };
+
+    const onMouseLeave = () => {
+      if (!isDown) return;
+      isDown = false;
+      setIsDragging(false);
+      reqId = requestAnimationFrame(momentumLoop);
+    };
+
+    const onMouseUp = () => {
+      if (!isDown) return;
+      isDown = false;
+      setTimeout(() => setIsDragging(false), 50);
+      reqId = requestAnimationFrame(momentumLoop);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      const walk = (x - startX) * 1.5; // Drag Sensitivity
+      
+      if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
+        setIsDragging(true);
+      }
+
+      el.scrollLeft = scrollLeft - walk;
+      velX = e.pageX - lastX;
+      lastX = e.pageX;
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("mousemove", onMouseMove);
+
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("mousemove", onMouseMove);
+      stopMomentum();
+    };
+  }, []);
+
+  return { ref, isDragging };
+}
+
 export default function RealEstateServicePage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLDivElement>(null);
 
-  const ourWorkScrollRef = useRef<HTMLDivElement>(null);
-  const beforeAfterScrollRef = useRef<HTMLDivElement>(null);
+  const { ref: ourWorkScrollRef, isDragging: isOurWorkDragging } = useDraggableScroll<HTMLDivElement>();
+  const { ref: beforeAfterScrollRef, isDragging: isBeforeAfterDragging } = useDraggableScroll<HTMLDivElement>();
 
   useEffect(() => {
     const centerScroll = (el: HTMLDivElement | null) => {
@@ -152,7 +235,7 @@ export default function RealEstateServicePage() {
     };
     centerScroll(ourWorkScrollRef.current);
     centerScroll(beforeAfterScrollRef.current);
-  }, []);
+  }, [ourWorkScrollRef, beforeAfterScrollRef]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -176,7 +259,7 @@ export default function RealEstateServicePage() {
       {/* Background Glow */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] 2xl:w-[1400px] h-[400px] 2xl:h-[600px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
-      {/* ================= HERO SECTION (SCALED FOR LARGE SCREENS) ================= */}
+      {/* HERO SECTION */}
       <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 2xl:pt-56 2xl:pb-32 px-4 sm:px-6 max-w-7xl 2xl:max-w-[1700px] mx-auto">
         <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto px-4 ${cinzel.className}`}>
           {/* Badge Section */}
@@ -203,7 +286,6 @@ export default function RealEstateServicePage() {
             ref={btnRef}
             className="mt-10 sm:mt-12 lg:mt-14 2xl:mt-16 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 lg:gap-8 w-full sm:w-auto px-4 sm:px-0 font-sans"
           >
-            {/* Book a Call Button */}
             <Link
               href="/#book-call"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-500 px-7 sm:px-9 lg:px-10 2xl:px-14 py-3.5 sm:py-4 lg:py-4.5 2xl:py-6 text-xs sm:text-sm lg:text-base 2xl:text-xl font-bold uppercase tracking-wider text-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-xl shadow-purple-500/30"
@@ -212,7 +294,6 @@ export default function RealEstateServicePage() {
               <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 2xl:w-7 2xl:h-7" />
             </Link>
 
-            {/* WhatsApp Glow Button */}
             <div className="relative group/btn w-full sm:w-auto">
               <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
               <Link
@@ -228,7 +309,7 @@ export default function RealEstateServicePage() {
           </div>
         </div>
 
-        {/* ================= HERO FEATURES BAR ================= */}
+        {/* HERO FEATURES BAR */}
         <div className="w-full max-w-7xl 2xl:max-w-[1700px] mx-auto mt-16 md:mt-24 2xl:mt-32 px-2 sm:px-4 fade-up z-10">
           <div className="w-full py-6 2xl:py-10 px-5 sm:px-8 2xl:px-12 rounded-2xl md:rounded-full bg-[#0e0720]/90 border border-purple-400/40 backdrop-blur-xl shadow-[0_0_35px_rgba(168,85,247,0.2)]">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-x-6 gap-y-6 2xl:gap-x-10 items-center justify-center">
@@ -255,7 +336,7 @@ export default function RealEstateServicePage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK ================= */}
+      {/* ================= OUR WORK (DRAGGABLE) ================= */}
       <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
@@ -269,10 +350,10 @@ export default function RealEstateServicePage() {
         <div className="relative z-10 w-full max-w-[2200px] mx-auto">
           <div
             ref={ourWorkScrollRef}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 snap-x snap-mandatory items-center justify-start 2xl:justify-center scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {ourWorkList.map((item) => (
-              <div key={item.id} className="snap-center shrink-0">
+              <div key={item.id} className="shrink-0">
                 <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
                   <video
                     src={item.video}
@@ -280,9 +361,17 @@ export default function RealEstateServicePage() {
                     muted
                     playsInline
                     preload="metadata"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onMouseEnter={(e) => { e.currentTarget.muted = false; e.currentTarget.play().catch(() => {}); }}
-                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+                    onMouseEnter={(e) => {
+                      if (!isOurWorkDragging) {
+                        e.currentTarget.muted = false;
+                        e.currentTarget.play().catch(() => {});
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
                 </div>
@@ -292,8 +381,8 @@ export default function RealEstateServicePage() {
         </div>
       </section>
 
-      {/* ================= BEFORE / AFTER ================= */}
-      <section className="relative z-10 w-full py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 bg-[#06030a]">
+      {/* ================= BEFORE / AFTER (DRAGGABLE) ================= */}
+      <section className="relative z-10 w-full py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 bg-[#06030a] select-none">
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
             Transformation Showcase
@@ -306,10 +395,10 @@ export default function RealEstateServicePage() {
         <div className="relative z-10 w-full max-w-[2200px] mx-auto">
           <div
             ref={beforeAfterScrollRef}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 snap-x snap-mandatory items-center justify-start 2xl:justify-center scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {beforeAfterCards.map((item) => (
-              <div key={item.id} className="snap-center shrink-0">
+              <div key={item.id} className="shrink-0">
                 <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
                   <video
                     src={item.video}
@@ -317,9 +406,17 @@ export default function RealEstateServicePage() {
                     muted
                     playsInline
                     preload="metadata"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onMouseEnter={(e) => { e.currentTarget.muted = false; e.currentTarget.play().catch(() => {}); }}
-                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+                    onMouseEnter={(e) => {
+                      if (!isBeforeAfterDragging) {
+                        e.currentTarget.muted = false;
+                        e.currentTarget.play().catch(() => {});
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause();
+                      e.currentTarget.currentTime = 0;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
                 </div>
@@ -329,13 +426,13 @@ export default function RealEstateServicePage() {
         </div>
       </section>
 
-      {/* ================= PACKAGES SECTION ================= */}
+      {/* PACKAGES SECTION */}
       <PricingPackagesSection />
     </div>
   );
 }
 
-/* ================= PRICING CARD COMPONENT (SCALED) ================= */
+/* ================= PRICING CARD COMPONENT ================= */
 function PricingCard({ plan }: { plan: PricingPlan }) {
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
@@ -499,7 +596,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
   );
 }
 
-/* ================= PRICING PACKAGES SECTION (SCALED) ================= */
+/* ================= PRICING PACKAGES SECTION ================= */
 function PricingPackagesSection() {
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -532,7 +629,6 @@ function PricingPackagesSection() {
           <div className="w-full relative p-6 sm:p-8 2xl:p-12 rounded-3xl border border-purple-500/30 bg-[#0a0514]/80 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
               
-              {/* Feature 1 */}
               <div className="flex items-start gap-4 2xl:gap-5">
                 <div className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-2xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center shrink-0 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
                   <CreditCard className="w-5 h-5 2xl:w-7 2xl:h-7 stroke-[1.75]" />
@@ -545,7 +641,6 @@ function PricingPackagesSection() {
                 </div>
               </div>
 
-              {/* Feature 2 */}
               <div className="flex items-start gap-4 2xl:gap-5">
                 <div className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-2xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center shrink-0 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
                   <InfinityIcon className="w-5 h-5 2xl:w-7 2xl:h-7 stroke-[1.75]" />
@@ -558,7 +653,6 @@ function PricingPackagesSection() {
                 </div>
               </div>
 
-              {/* Feature 3 */}
               <div className="flex items-start gap-4 2xl:gap-5">
                 <div className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-2xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center shrink-0 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
                   <RotateCcw className="w-5 h-5 2xl:w-7 2xl:h-7 stroke-[1.75]" />
@@ -574,7 +668,6 @@ function PricingPackagesSection() {
             </div>
           </div>
 
-          {/* Bottom Call Button (Scaled) */}
           <div ref={buttonRef} className="z-10 mt-12 sm:mt-16 2xl:mt-24 shrink-0 relative group/btn px-4">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
             <Link

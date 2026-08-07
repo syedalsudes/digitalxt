@@ -11,10 +11,10 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 bg-[#25D366] text-white rounded-full shadow-lg hover:bg-[#20ba5a] transition-all duration-300 hover:scale-110"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full shadow-lg hover:bg-[#20ba5a] active:scale-95 hover:scale-110 transition-all duration-300"
     >
       <svg
-        className="w-8 h-8 fill-current"
+        className="w-6 h-6 sm:w-8 sm:h-8 fill-current"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 448 512"
       >

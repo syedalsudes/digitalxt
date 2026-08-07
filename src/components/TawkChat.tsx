@@ -5,7 +5,8 @@ import Script from 'next/script';
 export default function TawkChat() {
   return (
     <>
-      <Script id="tawk-custom-position" strategy="beforeInteractive">
+      {/* Configuration Script - Lowered yOffset */}
+      <Script id="tawk-config" strategy="afterInteractive">
         {`
           var Tawk_API = Tawk_API || {};
           Tawk_API.customStyle = {
@@ -13,17 +14,19 @@ export default function TawkChat() {
               desktop: {
                 position: 'br',
                 xOffset: 24,
-                yOffset: 95
+                yOffset: 84 // Pehle 110 tha, ab niche kar diya hai
               },
               mobile: {
                 position: 'br',
-                xOffset: 15,
-                yOffset: 85
+                xOffset: 16,
+                yOffset: 74 // Pehle 85 tha, ab niche kar diya hai
               }
             }
           };
         `}
       </Script>
+
+      {/* Main Tawk Script */}
       <Script
         id="tawk-script"
         strategy="afterInteractive"

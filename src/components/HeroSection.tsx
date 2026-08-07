@@ -178,7 +178,8 @@ export default function HeroSection() {
   return (
     <main
       ref={mainRef}
-      className="relative w-full min-h-screen pt-20 sm:pt-32 md:pt-40 lg:pt-44 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-12 sm:pb-16 2xl:pb-24 selection:bg-purple-500/30"
+      /* Updated top padding for Mobile (pt-32), Small Screens (sm:pt-36), and Tablets (md:pt-44) */
+      className="relative w-full min-h-screen pt-32 sm:pt-36 md:pt-44 lg:pt-48 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-12 sm:pb-16 2xl:pb-24 selection:bg-purple-500/30"
     >
       {/* Background Ambient Glows */}
       <div
@@ -199,17 +200,22 @@ export default function HeroSection() {
       {/* Main Content Area */}
       <div className="relative z-20 flex w-full max-w-7xl 2xl:max-w-[1600px] flex-col items-center justify-center text-center px-4 sm:px-6 mb-6 sm:mb-10 lg:mb-16">
 
-        {/* Responsive Header Wrapper */}
-        <div className="w-full max-w-full overflow-hidden flex justify-center items-center px-2">
+        {/* Updated Heading Container */}
+        <div className="w-full flex justify-center items-center px-2">
           <h1
             ref={titleRef}
-            className={`font-black tracking-tight sm:tracking-normal lg:tracking-wider uppercase text-center lg:whitespace-nowrap bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent ${cinzel.className}`}
-            style={{
-              fontSize: "clamp(1.35rem, 4.2vw, 3.75rem)",
-              lineHeight: 1.2
-            }}
+            className={`font-black uppercase text-center 
+              text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-100 to-purple-300
+              
+              /* Mobile & Tablet: Natural wrapping (2 lines) */
+              text-2xl sm:text-4xl md:text-5xl whitespace-normal tracking-tight sm:tracking-normal
+              
+              /* Laptop & Desktop: Single line guaranteed without overflow */
+              lg:whitespace-nowrap lg:text-[2.2vw] xl:text-[2.5vw] 2xl:text-5xl lg:tracking-tight
+              ${cinzel.className}`}
+            style={{ lineHeight: 1.25 }}
           >
-            Elevate Your Brand's Videos
+            Premium Video Production For Modern Brands.
           </h1>
         </div>
 
@@ -357,15 +363,15 @@ const HeroCard = memo(function HeroCard({
       aria-current={isCenter}
       tabIndex={isMobile || isVisible ? 0 : -1}
       className={`${isMobile
-          ? "relative aspect-[9/14] w-[210px] sm:w-[280px] md:w-[330px]"
-          : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
+        ? "relative aspect-[9/14] w-[210px] sm:w-[280px] md:w-[330px]"
+        : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
         } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none`}
       style={style}
     >
       <div
         className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${isCenter
-            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_30px_rgba(168,85,247,0.5)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)] scale-100"
-            : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px] opacity-80"
+          ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_30px_rgba(168,85,247,0.5)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)] scale-100"
+          : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px] opacity-80"
           }`}
       >
         <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px]">

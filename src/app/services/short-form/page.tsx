@@ -2,14 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Cinzel } from "next/font/google";
 import {
   Zap,
   Check,
   Wand2,
   Volume2,
-  Layers,
   ArrowRight,
   ArrowUpRight,
   PhoneCall,
@@ -173,6 +171,91 @@ const longFormPlans: PricingPlan[] = [
   },
 ];
 
+// Custom Hook for Ultra-Smooth Inertial Dragging
+function useDraggableScroll<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let isDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let velX = 0;
+    let lastX = 0;
+    let reqId: number;
+
+    const stopMomentum = () => {
+      cancelAnimationFrame(reqId);
+    };
+
+    const momentumLoop = () => {
+      if (!el) return;
+      el.scrollLeft -= velX;
+      velX *= 0.95; // Friction Deceleration
+      if (Math.abs(velX) > 0.5) {
+        reqId = requestAnimationFrame(momentumLoop);
+      }
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      setIsDragging(false);
+      stopMomentum();
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+      lastX = e.pageX;
+      velX = 0;
+    };
+
+    const onMouseLeave = () => {
+      if (!isDown) return;
+      isDown = false;
+      setIsDragging(false);
+      reqId = requestAnimationFrame(momentumLoop);
+    };
+
+    const onMouseUp = () => {
+      if (!isDown) return;
+      isDown = false;
+      setTimeout(() => setIsDragging(false), 50);
+      reqId = requestAnimationFrame(momentumLoop);
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      const walk = (x - startX) * 1.5; // Drag Sensitivity
+
+      if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
+        setIsDragging(true);
+      }
+
+      el.scrollLeft = scrollLeft - walk;
+      velX = e.pageX - lastX;
+      lastX = e.pageX;
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    el.addEventListener("mouseleave", onMouseLeave);
+    el.addEventListener("mouseup", onMouseUp);
+    el.addEventListener("mousemove", onMouseMove);
+
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      el.removeEventListener("mouseleave", onMouseLeave);
+      el.removeEventListener("mouseup", onMouseUp);
+      el.removeEventListener("mousemove", onMouseMove);
+      stopMomentum();
+    };
+  }, []);
+
+  return { ref, isDragging };
+}
+
 export default function CustomVideoEditingPage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -201,7 +284,7 @@ export default function CustomVideoEditingPage() {
       {/* Background Glow */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] 2xl:w-[1400px] h-[400px] 2xl:h-[600px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
-      {/* ================= HERO SECTION (SCALED FOR ULTRA-WIDE) ================= */}
+      {/* HERO SECTION */}
       <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 2xl:pt-56 2xl:pb-32 px-4 sm:px-6 max-w-7xl 2xl:max-w-[1700px] mx-auto">
         <div
           ref={headerRef}
@@ -278,46 +361,48 @@ export default function CustomVideoEditingPage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK GRID SECTION (SCALED) ================= */}
+      {/* ================= OUR WORK (MATCHED STYLING & DRAGGABLE LIKE REFERENCE) ================= */}
       <WorkGridSection />
 
-      {/* ================= PACKAGES SECTION (SHORT & LONG FORM - SCALED) ================= */}
+      {/* PACKAGES SECTION */}
       <PricingPackagesSection />
 
-      {/* ================= WHITE LABELING FOR AGENCIES (SCALED) ================= */}
+      {/* WHITE LABELING FOR AGENCIES */}
       <WhiteLabelAgencySection />
 
     </div>
   );
 }
 
-/* ================= OUR WORK GRID SECTION ================= */
+/* ================= OUR WORK SECTION (EXACT REFERENCE CODE IMPLEMENTATION) ================= */
 
 function WorkGridSection() {
-  return (
-    <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
-      
-      <Image
-        src="/servicesvid.png"
-        alt="Our Work Background"
-        fill
-        priority
-        className="object-cover object-center z-0 pointer-events-none opacity-30 blur-sm"
-      />
+  const { ref: ourWorkScrollRef, isDragging } = useDraggableScroll<HTMLDivElement>();
 
-      <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
-        <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-3">
-          FEATURED SHOWREEL
+  useEffect(() => {
+    if (ourWorkScrollRef.current && ourWorkScrollRef.current.scrollWidth > ourWorkScrollRef.current.clientWidth) {
+      ourWorkScrollRef.current.scrollLeft = (ourWorkScrollRef.current.scrollWidth - ourWorkScrollRef.current.clientWidth) / 2;
+    }
+  }, [ourWorkScrollRef]);
+
+  return (
+    <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
+      <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
+        <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
+          Featured Showreel & Vertical Edits
         </p>
         <h2 className="text-3xl sm:text-5xl md:text-7xl 2xl:text-8xl font-black tracking-wider uppercase bg-gradient-to-b from-white via-purple-100 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
           OUR WORK
         </h2>
       </div>
 
-      <div className="max-w-[1500px] 2xl:max-w-[2000px] mx-auto w-full px-4 sm:px-6 lg:px-8 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
+      <div className="relative z-10 w-full max-w-[2200px] mx-auto">
+        <div
+          ref={ourWorkScrollRef}
+          className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {worksList.map((item) => (
-            <WorkGridCard key={item.id} item={item} />
+            <WorkGridCard key={item.id} item={item} isDragging={isDragging} />
           ))}
         </div>
       </div>
@@ -325,51 +410,39 @@ function WorkGridSection() {
   );
 }
 
-function WorkGridCard({ item }: { item: { id: number; video: string } }) {
+function WorkGridCard({ item, isDragging }: { item: { id: number; video: string }; isDragging: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      const promise = videoRef.current.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play().catch(() => {});
-          }
-        });
-      }
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
-    }
-  };
-
   return (
-    <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl 2xl:rounded-3xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
-    >
-      <video
-        ref={videoRef}
-        src={item.video}
-        loop
-        playsInline
-        preload="metadata"
-        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
-      />
+    <div className="shrink-0">
+      <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
+        <video
+          ref={videoRef}
+          src={item.video}
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+          onMouseEnter={(e) => {
+            if (!isDragging) {
+              e.currentTarget.muted = false;
+              e.currentTarget.play().catch(() => {});
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.pause();
+            e.currentTarget.currentTime = 0;
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+      </div>
     </div>
   );
 }
 
-/* ================= PRICING CARD COMPONENT (SCALED) ================= */
+
+/* ================= PRICING CARD COMPONENT ================= */
 
 function PricingCard({ plan }: { plan: PricingPlan }) {
   const [rotateX, setRotateX] = useState(0);
@@ -534,7 +607,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
   );
 }
 
-/* ================= PRICING PACKAGES SECTION (SCALED) ================= */
+/* ================= PRICING PACKAGES SECTION ================= */
 
 function PricingPackagesSection() {
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
@@ -592,7 +665,6 @@ function PricingPackagesSection() {
         {/* ACTION BUTTONS BELOW PACKAGES */}
         <div className="max-w-4xl 2xl:max-w-6xl mx-auto pt-8 2xl:pt-12 px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 2xl:gap-8">
           
-          {/* Book A Call */}
           <div className="shrink-0 relative group/btn w-full sm:w-auto">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
             <Link
@@ -605,12 +677,11 @@ function PricingPackagesSection() {
             </Link>
           </div>
 
-          {/* Get Custom Quote */}
           <div className="shrink-0 relative group/btn w-full sm:w-auto">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-fuchsia-500 opacity-30 blur-md group-hover/btn:opacity-70 transition-opacity duration-300" />
             <Link
               href="/#book-call"
-              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 2xl:px-14 py-4 2xl:py-6 rounded-full text-xs sm:text-sm 2xl:text-lg font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-purple-950/60"
+              className="relative w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 sm:px-10 2xl:px-14 py-4 2xl:py-6 rounded-full text-xs sm:text-sm 2xl:text-lg font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90 shadow-[0_0_25px_rgba(168,85,247,0.25)]"
             >
               <MessageSquarePlus className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 text-purple-300" />
               <span className="relative z-10">Get Custom Quote</span>
@@ -624,7 +695,7 @@ function PricingPackagesSection() {
   );
 }
 
-/* ================= WHITE LABELING FOR AGENCIES (SCALED) ================= */
+/* ================= WHITE LABELING FOR AGENCIES ================= */
 
 function WhiteLabelAgencySection() {
   const agencyFeatures = [
@@ -647,28 +718,22 @@ function WhiteLabelAgencySection() {
 
   return (
     <section className="relative w-full bg-[#06030a] text-white py-20 sm:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
-      {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] 2xl:w-[1000px] h-[350px] 2xl:h-[500px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
 
       <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 relative z-10">
-        {/* Main Card Container */}
         <div className="group relative p-[1.5px] transition-all duration-500">
           
-          {/* Card Border Gradient & Outer Glow */}
           <div 
             className="absolute inset-0 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-purple-800 opacity-80 group-hover:opacity-100 shadow-[0_0_40px_rgba(168,85,247,0.3)] transition-all duration-500"
             style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
           />
 
-          {/* Card Content Inner */}
           <div 
             className="relative p-8 sm:p-12 2xl:p-16 bg-[#0d061c]/95 backdrop-blur-2xl flex flex-col justify-between h-full w-full"
             style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
           >
-            {/* Top Accent Line */}
             <div className="absolute top-0 right-16 w-20 2xl:w-28 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
 
-            {/* Header Area */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 2xl:mb-14 pb-8 2xl:pb-12 border-b border-purple-500/20">
               <div className="text-left">
                 <span 
@@ -694,7 +759,6 @@ function WhiteLabelAgencySection() {
               </Link>
             </div>
 
-            {/* Features 3-Column Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 2xl:gap-10">
               {agencyFeatures.map((item, idx) => {
                 const Icon = item.icon;
@@ -717,7 +781,6 @@ function WhiteLabelAgencySection() {
               })}
             </div>
 
-            {/* Bottom Accent Line */}
             <div className="absolute bottom-0 left-16 w-20 2xl:w-28 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
           </div>
 
