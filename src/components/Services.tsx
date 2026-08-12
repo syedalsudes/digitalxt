@@ -50,7 +50,7 @@ const servicesList: ServiceData[] = [
     portfolioLabel: "Our Work",
     portfolioHref: "/services/real-estate",
     pricingHref: "/services/real-estate#pricing",
-    videoUrl: "/videos/ourwork/workvid2.mp4",
+    videoUrl: "https://res.cloudinary.com/dh0hbkwm/video/upload/v1786560011/realstatehome.mp4",
   },
   {
     id: "saas-launch",
@@ -65,7 +65,7 @@ const servicesList: ServiceData[] = [
     portfolioLabel: "SaaS Portfolio",
     portfolioHref: "/services/saas-videos",
     pricingHref: "/services/saas-videos#pricing",
-    videoUrl: "/videos/ourwork/workvid1.mp4",
+    videoUrl: "https://res.cloudinary.com/dh0hbkwm/video/upload/v1786559717/homesaas.mp4",
   },
   {
     id: "custom-editing",
@@ -89,11 +89,12 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const ServiceIcon = service.icon;
   const isMiddleCard = index === 1;
+  const isReel = service.id === "real-estate"; // Reel check for 9:16 aspect ratio
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 1024) return;
@@ -127,7 +128,13 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.muted = false; // Enable audio with sound on play
+        videoRef.current.play().catch(() => {
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play();
+          }
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -153,7 +160,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
 
       {/* Main Glass Card Container */}
       <div
-        className={`relative flex flex-col lg:flex-row justify-between items-stretch p-6 sm:p-8 lg:p-12 2xl:p-16 h-full w-full bg-[#0a0512]/95 backdrop-blur-2xl gap-8 lg:gap-12 2xl:gap-16 ${
+        className={`relative flex flex-col lg:flex-row justify-between items-center p-6 sm:p-8 lg:p-12 2xl:p-16 h-full w-full bg-[#0a0512]/95 backdrop-blur-2xl gap-8 lg:gap-12 2xl:gap-16 ${
           isMiddleCard ? "lg:flex-row-reverse" : ""
         }`}
         style={{ clipPath: clipPathShape }}
@@ -244,37 +251,49 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Video Box */}
-        <div className="w-full lg:w-[45%] xl:w-[48%] max-w-[650px] 2xl:max-w-[750px] flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0">
+        {/* RIGHT COLUMN: Video Box (Dynamic Aspect Ratio for Vertical Reels vs Landscape) */}
+        <div className={`w-full flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0 ${
+          isReel 
+            ? "lg:w-[35%] xl:w-[32%] max-w-[280px] sm:max-w-[320px] 2xl:max-w-[380px]" 
+            : "lg:w-[45%] xl:w-[48%] max-w-[650px] 2xl:max-w-[750px]"
+        }`}>
           <div 
-            className="relative w-full aspect-[16/9] bg-black/80 border border-purple-500/40 overflow-hidden group/video shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-xl"
+            className={`relative w-full bg-black/80 border border-purple-500/40 overflow-hidden group/video shadow-[0_0_30px_rgba(0,0,0,0.8)] rounded-xl cursor-pointer ${
+              isReel ? "aspect-[9/16]" : "aspect-[16/9]"
+            }`}
             style={{ clipPath: innerClipPath }}
+            onClick={togglePlay}
           >
             <video
               ref={videoRef}
               src={service.videoUrl}
-              autoPlay
+              poster={service.videoUrl.includes('cloudinary.com') ? service.videoUrl.replace(/\.[^/.]+$/, ".jpg") : undefined}
               loop
               muted
               playsInline
+              preload="metadata"
               className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
             />
 
-            {/* Video Overlay Controls */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 opacity-0 group-hover/video:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            {/* Always Visible Play Button overlay when video is paused */}
+            <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 flex items-center justify-center ${isPlaying ? "opacity-0 group-hover/video:opacity-100" : "opacity-100"}`}>
               <button
-                onClick={togglePlay}
-                className="p-4 bg-purple-600/80 hover:bg-purple-500 text-white rounded-full backdrop-blur-md transition-all duration-300 transform scale-90 hover:scale-105 border border-purple-300/40 shadow-lg"
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlay();
+                }}
+                className="p-4 bg-purple-600/90 hover:bg-purple-500 text-white rounded-full backdrop-blur-md transition-all duration-300 transform scale-100 hover:scale-110 border border-purple-300/40 shadow-xl"
                 aria-label={isPlaying ? "Pause Video" : "Play Video"}
               >
-                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
+                {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current ml-1" />}
               </button>
             </div>
 
             {/* Preview Tag */}
-            <div className="absolute top-3.5 left-3.5 px-3 py-1 bg-black/70 backdrop-blur-md border border-purple-500/40 text-[10px] sm:text-xs font-mono tracking-widest text-purple-300 uppercase flex items-center gap-2 rounded-md">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-              PREVIEW
+            <div className="absolute top-3.5 left-3.5 px-3 py-1 bg-black/70 backdrop-blur-md border border-purple-500/40 text-[10px] sm:text-xs font-mono tracking-widest text-purple-300 uppercase flex items-center gap-2 rounded-md z-10">
+              <span className={`w-2 h-2 rounded-full ${isPlaying ? "bg-green-500 animate-pulse" : "bg-purple-500"}`} />
+              {isPlaying ? "PLAYING" : "PREVIEW"}
             </div>
           </div>
         </div>
@@ -373,7 +392,7 @@ export default function ServicesSection() {
           {/* Ambient Lighting Background */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[600px] lg:w-[900px] 2xl:w-[1200px] h-[250px] sm:h-[400px] 2xl:h-[500px] bg-purple-600/10 blur-[140px] rounded-full pointer-events-none" />
 
-          {/* Counter Label Header (UPDATED: Bigger, Bolder & Solid White) */}
+          {/* Counter Label Header */}
           <div className={`z-10 text-center max-w-5xl mx-auto flex flex-col items-center mb-6 sm:mb-8 ${cinzel.className}`}>
             <p className="text-lg sm:text-2xl md:text-3xl 2xl:text-4xl font-extrabold uppercase tracking-[0.2em] sm:tracking-[0.3em] text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]">
               0{index + 1} / SERVICE SPECIFICATION

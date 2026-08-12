@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Loader2 } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { CloudinaryResource } from "@/lib/cloudinary"; // Path Check karlaleyn
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -15,16 +16,8 @@ const cinzel = Cinzel({
 interface Testimonial {
   id: string;
   videoSrc: string;
+  poster: string;
 }
-
-const testimonials: Testimonial[] = [
-  { id: "1", videoSrc: "/videos/review1.mp4" },
-  { id: "2", videoSrc: "/videos/review2.mp4" },
-  { id: "3", videoSrc: "/videos/review3.mp4" },
-  { id: "4", videoSrc: "/videos/review4.mp4" },
-  { id: "5", videoSrc: "/videos/review5.mp4" },
-  { id: "6", videoSrc: "/videos/review6.mp4" },
-];
 
 function VideoCard({
   item,
@@ -38,7 +31,7 @@ function VideoCard({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Jab active status change ho to inactive videos ko pause aur reset kar do
+  // Jab active status change ho (e.g. video center se hatte hi), pause aur reset
   useEffect(() => {
     if (!isActive && videoRef.current) {
       videoRef.current.pause();
@@ -57,7 +50,6 @@ function VideoCard({
         .play()
         .then(() => setIsPlaying(true))
         .catch(() => {
-          // Fallback agar browser sound ke sath play allow na kare
           if (videoRef.current) {
             videoRef.current.muted = true;
             videoRef.current.play();
@@ -70,44 +62,21 @@ function VideoCard({
     }
   };
 
-  const handleMouseEnter = () => {
-    // Desktop hover effect (optional preview)
-    if (window.innerWidth >= 768 && videoRef.current && !isPlaying) {
-      videoRef.current.muted = false;
-      videoRef.current.play().catch(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          videoRef.current.play();
-        }
-      });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (window.innerWidth >= 768 && videoRef.current && !isPlaying) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
-    }
-  };
-
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // 1. Clear center mein nahi hai toh pehle ise active/center banao
+    // 1. Agar center me nahi hai to pehle sirf center me lao (play mat karo)
     if (!isActive) {
       onMakeActive();
       return;
     }
 
-    // 2. Agar active hai to wahi cards par hi play/pause toggle karo
+    // 2. Agar already center me hai, tab play / pause toggle karo
     togglePlay();
   };
 
   return (
     <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
       className={`relative w-[130px] xs:w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] 2xl:w-[250px] h-[230px] sm:h-[310px] md:h-[340px] 2xl:h-[380px] rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0c0617] border transition-all duration-300 ease-out cursor-pointer select-none group shadow-2xl ${
         isActive
@@ -117,25 +86,42 @@ function VideoCard({
     >
       <video
         ref={videoRef}
+        src={item.videoSrc}
+        poster={item.poster}
         muted
         loop
         playsInline
         preload="metadata"
         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 pointer-events-none"
-      >
-        <source src={item.videoSrc} type="video/mp4" />
-      </video>
+      />
 
       {/* Glass overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play/Pause Button Overlay */}
-     
+      {/* Play/Pause Button Overlay for Center Active Card */}
+      {isActive && (
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${
+            isPlaying ? "opacity-0 group-hover:opacity-100 bg-black/20" : "opacity-100 bg-black/40"
+          }`}
+        >
+          <div className="p-3.5 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+            {isPlaying ? (
+              <Pause className="w-6 h-6 fill-current" />
+            ) : (
+              <Play className="w-6 h-6 fill-current ml-0.5" />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function VideoTestimonials() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [screenType, setScreenType] = useState<"mobile" | "desktop" | "large">("desktop");
@@ -150,6 +136,31 @@ export default function VideoTestimonials() {
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Fetch All Testimonials Videos from Cloudinary
+  useEffect(() => {
+    async function fetchAllTestimonials() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/testimonials");
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data)) {
+          const fetchedTestimonials: Testimonial[] = data.map((item) => ({
+            id: item.public_id,
+            videoSrc: item.secure_url,
+            poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
+          }));
+          setTestimonials(fetchedTestimonials);
+        }
+      } catch (err) {
+        console.error("Error fetching testimonials from Cloudinary:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAllTestimonials();
+  }, []);
 
   // Screen Resize Detector
   useEffect(() => {
@@ -168,8 +179,10 @@ export default function VideoTestimonials() {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // 1. Setup Lenis and ScrollTrigger Entrance Animation
+  // Setup Lenis and ScrollTrigger Entrance Animation
   useEffect(() => {
+    if (loading || testimonials.length === 0) return;
+
     gsap.registerPlugin(ScrollTrigger);
 
     const lenis = new Lenis({
@@ -227,19 +240,19 @@ export default function VideoTestimonials() {
       gsap.ticker.remove(updateLenis);
       lenis.destroy();
     };
-  }, []);
+  }, [loading, testimonials]);
 
-  // 2. Auto Rotation Timer
+  // Auto Rotation Timer
   useEffect(() => {
-    if (isHovered || isDragging) return;
+    if (isHovered || isDragging || testimonials.length === 0) return;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % testimonials.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [isHovered, isDragging]);
+  }, [isHovered, isDragging, testimonials]);
 
-  // 3. Stop videos on section leave
+  // Stop videos on section leave
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -265,12 +278,13 @@ export default function VideoTestimonials() {
 
   // Drag & Swipe Handlers
   const handleDragStart = (clientX: number) => {
+    if (testimonials.length === 0) return;
     setIsDragging(true);
     dragStartX.current = clientX;
   };
 
   const handleDragEnd = (clientX: number) => {
-    if (!isDragging) return;
+    if (!isDragging || testimonials.length === 0) return;
     setIsDragging(false);
     const diff = dragStartX.current - clientX;
 
@@ -285,6 +299,8 @@ export default function VideoTestimonials() {
 
   // Horizontal Trackpad/Mouse Wheel Scroll
   const handleWheel = (e: React.WheelEvent) => {
+    if (testimonials.length === 0) return;
+
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 15) {
       if (!wheelTimeout.current) {
         if (e.deltaX > 0) {
@@ -341,92 +357,99 @@ export default function VideoTestimonials() {
         onTouchEnd={(e) => handleDragEnd(e.changedTouches[0].clientX)}
         onWheel={handleWheel}
       >
-        {/* Curved Fan Rotator Ring */}
-        <div className="relative w-full flex items-center justify-center h-[280px] sm:h-[360px] 2xl:h-[440px] [perspective:1200px]">
-          {testimonials.map((item, index) => {
-            const total = testimonials.length;
-            const offset = (index - activeIndex + total) % total;
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            <span className="text-xs uppercase tracking-widest text-slate-400 font-mono">Loading Testimonials...</span>
+          </div>
+        ) : (
+          /* Curved Fan Rotator Ring */
+          <div className="relative w-full flex items-center justify-center h-[280px] sm:h-[360px] 2xl:h-[440px] [perspective:1200px]">
+            {testimonials.map((item, index) => {
+              const total = testimonials.length;
+              const offset = (index - activeIndex + total) % total;
 
-            let xPos = 0;
-            let yPos = 0;
-            let rotateZ = 0;
-            let rotateY = 0;
-            let scale = 0.8;
-            let opacity = 0;
-            let zIndex = 10;
+              let xPos = 0;
+              let yPos = 0;
+              let rotateZ = 0;
+              let rotateY = 0;
+              let scale = 0.8;
+              let opacity = 0;
+              let zIndex = 10;
 
-            if (offset === 0) {
-              // CENTER ACTIVE VIDEO
-              xPos = 0;
-              yPos = screenType === "mobile" ? -5 : -12;
-              scale = screenType === "mobile" ? 1.05 : screenType === "large" ? 1.15 : 1.1;
-              opacity = 1;
-              zIndex = 30;
-              rotateZ = 0;
-              rotateY = 0;
-            } else if (offset === 1) {
-              // RIGHT 1
-              xPos = screenType === "mobile" ? 100 : screenType === "large" ? 240 : 180;
-              yPos = screenType === "mobile" ? 15 : 25;
-              scale = screenType === "mobile" ? 0.84 : 0.92;
-              opacity = screenType === "mobile" ? 0.65 : 0.9;
-              rotateZ = 6;
-              rotateY = -12;
-              zIndex = 20;
-            } else if (offset === 2) {
-              // RIGHT 2
-              xPos = screenType === "mobile" ? 165 : screenType === "large" ? 430 : 330;
-              yPos = screenType === "mobile" ? 35 : 55;
-              scale = screenType === "mobile" ? 0.68 : 0.76;
-              opacity = screenType === "mobile" ? 0.25 : 0.55;
-              rotateZ = 12;
-              rotateY = -24;
-              zIndex = 10;
-            } else if (offset === total - 1) {
-              // LEFT 1
-              xPos = screenType === "mobile" ? -100 : screenType === "large" ? -240 : -180;
-              yPos = screenType === "mobile" ? 15 : 25;
-              scale = screenType === "mobile" ? 0.84 : 0.92;
-              opacity = screenType === "mobile" ? 0.65 : 0.9;
-              rotateZ = -6;
-              rotateY = 12;
-              zIndex = 20;
-            } else if (offset === total - 2) {
-              // LEFT 2
-              xPos = screenType === "mobile" ? -165 : screenType === "large" ? -430 : -330;
-              yPos = screenType === "mobile" ? 35 : 55;
-              scale = screenType === "mobile" ? 0.68 : 0.76;
-              opacity = screenType === "mobile" ? 0.25 : 0.55;
-              rotateZ = -12;
-              rotateY = 24;
-              zIndex = 10;
-            } else {
-              xPos = 0;
-              yPos = 80;
-              scale = 0.5;
-              opacity = 0;
-              zIndex = 0;
-            }
+              if (offset === 0) {
+                // CENTER ACTIVE VIDEO
+                xPos = 0;
+                yPos = screenType === "mobile" ? -5 : -12;
+                scale = screenType === "mobile" ? 1.05 : screenType === "large" ? 1.15 : 1.1;
+                opacity = 1;
+                zIndex = 30;
+                rotateZ = 0;
+                rotateY = 0;
+              } else if (offset === 1) {
+                // RIGHT 1
+                xPos = screenType === "mobile" ? 100 : screenType === "large" ? 240 : 180;
+                yPos = screenType === "mobile" ? 15 : 25;
+                scale = screenType === "mobile" ? 0.84 : 0.92;
+                opacity = screenType === "mobile" ? 0.65 : 0.9;
+                rotateZ = 6;
+                rotateY = -12;
+                zIndex = 20;
+              } else if (offset === 2) {
+                // RIGHT 2
+                xPos = screenType === "mobile" ? 165 : screenType === "large" ? 430 : 330;
+                yPos = screenType === "mobile" ? 35 : 55;
+                scale = screenType === "mobile" ? 0.68 : 0.76;
+                opacity = screenType === "mobile" ? 0.25 : 0.55;
+                rotateZ = 12;
+                rotateY = -24;
+                zIndex = 10;
+              } else if (offset === total - 1) {
+                // LEFT 1
+                xPos = screenType === "mobile" ? -100 : screenType === "large" ? -240 : -180;
+                yPos = screenType === "mobile" ? 15 : 25;
+                scale = screenType === "mobile" ? 0.84 : 0.92;
+                opacity = screenType === "mobile" ? 0.65 : 0.9;
+                rotateZ = -6;
+                rotateY = 12;
+                zIndex = 20;
+              } else if (offset === total - 2) {
+                // LEFT 2
+                xPos = screenType === "mobile" ? -165 : screenType === "large" ? -430 : -330;
+                yPos = screenType === "mobile" ? 35 : 55;
+                scale = screenType === "mobile" ? 0.68 : 0.76;
+                opacity = screenType === "mobile" ? 0.25 : 0.55;
+                rotateZ = -12;
+                rotateY = 24;
+                zIndex = 10;
+              } else {
+                xPos = 0;
+                yPos = 80;
+                scale = 0.5;
+                opacity = 0;
+                zIndex = 0;
+              }
 
-            return (
-              <div
-                key={item.id}
-                style={{
-                  transform: `translate3d(${xPos}px, ${yPos}px, 0px) scale(${scale}) rotateZ(${rotateZ}deg) rotateY(${rotateY}deg)`,
-                  opacity: opacity,
-                  zIndex: zIndex,
-                }}
-                className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] origin-bottom transform-gpu"
-              >
-                <VideoCard
-                  item={item}
-                  isActive={offset === 0}
-                  onMakeActive={() => setActiveIndex(index)}
-                />
-              </div>
-            );
-          })}
-        </div>
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    transform: `translate3d(${xPos}px, ${yPos}px, 0px) scale(${scale}) rotateZ(${rotateZ}deg) rotateY(${rotateY}deg)`,
+                    opacity: opacity,
+                    zIndex: zIndex,
+                  }}
+                  className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] origin-bottom transform-gpu"
+                >
+                  <VideoCard
+                    item={item}
+                    isActive={offset === 0}
+                    onMakeActive={() => setActiveIndex(index)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

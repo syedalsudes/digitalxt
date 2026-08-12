@@ -16,10 +16,14 @@ import {
   FileText,
   Mic,
   Monitor,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Loader2,
+  Play,
+  Pause
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CloudinaryResource } from "@/lib/cloudinary";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -40,15 +44,11 @@ const heroFeatures = [
   { icon: Layers, title: "Revisions", desc: "100% Satisfaction" },
 ];
 
-// Work Videos List
-const worksList = [
-  { id: 1, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 2, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 3, video: "/videos/ourwork/workvid3.mp4" },
-  { id: 4, video: "/videos/ourwork/workvid4.mp4" },
-  { id: 5, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 6, video: "/videos/ourwork/workvid2.mp4" },
-];
+interface WorkItem {
+  id: string;
+  video: string;
+  poster: string;
+}
 
 // Pricing Plans Interface
 interface FeatureItem {
@@ -147,7 +147,7 @@ export default function SaasLaunchVideoPage() {
       {/* Ambient Background Glow */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] 2xl:w-[1400px] h-[400px] 2xl:h-[600px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
-      {/* ================= HERO SECTION (SCALED FOR ULTRA-WIDE) ================= */}
+      {/* ================= HERO SECTION ================= */}
       <section className="relative z-10 w-full flex flex-col items-center justify-center pt-32 pb-16 md:pt-44 md:pb-24 2xl:pt-56 2xl:pb-32 px-4 sm:px-6 max-w-7xl 2xl:max-w-[1700px] mx-auto">
         <div
           ref={headerRef}
@@ -224,10 +224,10 @@ export default function SaasLaunchVideoPage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK GRID SECTION (SCALED) ================= */}
+      {/* ================= OUR WORK GRID SECTION ================= */}
       <WorkGridSection />
 
-      {/* ================= PACKAGES SECTION (SCALED) ================= */}
+      {/* ================= PACKAGES SECTION ================= */}
       <PricingPackagesSection />
 
     </div>
@@ -237,6 +237,37 @@ export default function SaasLaunchVideoPage() {
 /* ================= OUR WORK GRID SECTION ================= */
 
 function WorkGridSection() {
+  const [worksList, setWorksList] = useState<WorkItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchSaaSVideos() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/saas");
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data)) {
+          // homesaas filter kar rahe hain kyunki wo services card par already use ho rahi hai
+          const filtered = data
+            .filter((item) => !item.public_id.toLowerCase().includes("homesaas"))
+            .map((item) => ({
+              id: item.public_id,
+              video: item.secure_url,
+              poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
+            }));
+
+          setWorksList(filtered);
+        }
+      } catch (err) {
+        console.error("Error fetching SaaS videos:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSaaSVideos();
+  }, []);
+
   return (
     <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
       
@@ -258,56 +289,74 @@ function WorkGridSection() {
       </div>
 
       <div className="max-w-[1500px] 2xl:max-w-[2000px] mx-auto w-full px-4 sm:px-6 lg:px-8 z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
-          {worksList.map((item) => (
-            <WorkGridCard key={item.id} item={item} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-48">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
+            {worksList.map((item) => (
+              <WorkGridCard key={item.id} item={item} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
-function WorkGridCard({ item }: { item: { id: number; video: string } }) {
+function WorkGridCard({ item }: { item: WorkItem }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      const promise = videoRef.current.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      videoRef.current.muted = false; // Enable audio with sound
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
           if (videoRef.current) {
             videoRef.current.muted = true;
-            videoRef.current.play().catch(() => {});
+            videoRef.current.play();
+            setIsPlaying(true);
           }
         });
-      }
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
+    } else {
       videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
+      setIsPlaying(false);
     }
   };
 
   return (
     <div
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onClick={togglePlay}
       className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl 2xl:rounded-3xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
     >
       <video
         ref={videoRef}
         src={item.video}
+        poster={item.poster}
         loop
         playsInline
         preload="metadata"
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
       />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+
+      {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+          {isPlaying ? (
+            <Pause className="w-6 h-6 fill-current" />
+          ) : (
+            <Play className="w-6 h-6 fill-current ml-0.5" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

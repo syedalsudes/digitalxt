@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
 import {
@@ -17,10 +17,14 @@ import {
   PhoneCall,
   CreditCard,
   Infinity as InfinityIcon,
-  RotateCcw
+  RotateCcw,
+  Loader2,
+  Play,
+  Pause
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CloudinaryResource } from "@/lib/cloudinary";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -38,31 +42,11 @@ const heroFeatures = [
   { icon: Clock, title: "24-48hr Delivery", desc: "Per Video" },
 ];
 
-const ourWorkList = [
-  { id: 1, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 2, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 3, video: "/videos/ourwork/workvid4.mp4" },
-  { id: 4, video: "/videos/ourwork/workvid3.mp4" },
-  { id: 5, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 6, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 7, video: "/videos/ourwork/workvid3.mp4" },
-  { id: 8, video: "/videos/ourwork/workvid4.mp4" },
-  { id: 9, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 10, video: "/videos/ourwork/workvid2.mp4" },
-];
-
-const beforeAfterCards = [
-  { id: "1", video: "/videos/review1.mp4" },
-  { id: "2", video: "/videos/review2.mp4" },
-  { id: "3", video: "/videos/review3.mp4" },
-  { id: "4", video: "/videos/review4.mp4" },
-  { id: "5", video: "/videos/review5.mp4" },
-  { id: "6", video: "/videos/review6.mp4" },
-  { id: "7", video: "/videos/review1.mp4" },
-  { id: "8", video: "/videos/review2.mp4" },
-  { id: "9", video: "/videos/review3.mp4" },
-  { id: "10", video: "/videos/review4.mp4" },
-];
+interface VideoItem {
+  id: string;
+  video: string;
+  poster: string;
+}
 
 interface FeatureItem {
   text: string;
@@ -135,6 +119,62 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
+// Interactive Clickable Video Card Component (Play/Pause button strictly visible ONLY on Hover)
+function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (isDragging || !videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      videoRef.current.muted = false; // Enable audio with sound
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play();
+            setIsPlaying(true);
+          }
+        });
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={togglePlay}
+      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer"
+    >
+      <video
+        ref={videoRef}
+        src={item.video}
+        poster={item.poster}
+        loop
+        playsInline
+        preload="metadata"
+        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+
+      {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+          {isPlaying ? (
+            <Pause className="w-6 h-6 fill-current" />
+          ) : (
+            <Play className="w-6 h-6 fill-current ml-0.5" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Custom Hook for Ultra-Smooth Inertial Dragging
 function useDraggableScroll<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -158,7 +198,7 @@ function useDraggableScroll<T extends HTMLElement>() {
     const momentumLoop = () => {
       if (!el) return;
       el.scrollLeft -= velX;
-      velX *= 0.95; // Friction Deceleration
+      velX *= 0.95;
       if (Math.abs(velX) > 0.5) {
         reqId = requestAnimationFrame(momentumLoop);
       }
@@ -192,7 +232,7 @@ function useDraggableScroll<T extends HTMLElement>() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.5; // Drag Sensitivity
+      const walk = (x - startX) * 1.5;
       
       if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
         setIsDragging(true);
@@ -224,8 +264,54 @@ export default function RealEstateServicePage() {
   const pageRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLDivElement>(null);
 
+  const [ourWorkList, setOurWorkList] = useState<VideoItem[]>([]);
+  const [beforeAfterCards, setBeforeAfterCards] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { ref: ourWorkScrollRef, isDragging: isOurWorkDragging } = useDraggableScroll<HTMLDivElement>();
   const { ref: beforeAfterScrollRef, isDragging: isBeforeAfterDragging } = useDraggableScroll<HTMLDivElement>();
+
+  // Cloudinary Fetch and Filter Logic
+  useEffect(() => {
+    async function fetchRealEstateMedia() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/realstate");
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data)) {
+          const work: VideoItem[] = [];
+          const beforeAfter: VideoItem[] = [];
+
+          data.forEach((item) => {
+            const fileName = item.public_id.split('/').pop()?.toLowerCase() || '';
+
+            if (fileName.includes('realstatehome')) return;
+
+            const videoItem: VideoItem = {
+              id: item.public_id,
+              video: item.secure_url,
+              poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg")
+            };
+
+            if (fileName.startsWith('ba')) {
+              beforeAfter.push(videoItem);
+            } else if (fileName.startsWith('r')) {
+              work.push(videoItem);
+            }
+          });
+
+          setOurWorkList(work);
+          setBeforeAfterCards(beforeAfter);
+        }
+      } catch (err) {
+        console.error("Error fetching Real Estate videos:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchRealEstateMedia();
+  }, []);
 
   useEffect(() => {
     const centerScroll = (el: HTMLDivElement | null) => {
@@ -235,7 +321,7 @@ export default function RealEstateServicePage() {
     };
     centerScroll(ourWorkScrollRef.current);
     centerScroll(beforeAfterScrollRef.current);
-  }, [ourWorkScrollRef, beforeAfterScrollRef]);
+  }, [ourWorkScrollRef, beforeAfterScrollRef, ourWorkList, beforeAfterCards]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -348,36 +434,22 @@ export default function RealEstateServicePage() {
         </div>
 
         <div className="relative z-10 w-full max-w-[2200px] mx-auto">
-          <div
-            ref={ourWorkScrollRef}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {ourWorkList.map((item) => (
-              <div key={item.id} className="shrink-0">
-                <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
-                  <video
-                    src={item.video}
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-                    onMouseEnter={(e) => {
-                      if (!isOurWorkDragging) {
-                        e.currentTarget.muted = false;
-                        e.currentTarget.play().catch(() => {});
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+          {loading ? (
+            <div className="flex justify-center items-center h-48">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          ) : (
+            <div
+              ref={ourWorkScrollRef}
+              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {ourWorkList.map((item) => (
+                <div key={item.id} className="shrink-0">
+                  <InteractiveVideoCard item={item} isDragging={isOurWorkDragging} />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -393,36 +465,22 @@ export default function RealEstateServicePage() {
         </div>
 
         <div className="relative z-10 w-full max-w-[2200px] mx-auto">
-          <div
-            ref={beforeAfterScrollRef}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {beforeAfterCards.map((item) => (
-              <div key={item.id} className="shrink-0">
-                <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
-                  <video
-                    src={item.video}
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-                    onMouseEnter={(e) => {
-                      if (!isBeforeAfterDragging) {
-                        e.currentTarget.muted = false;
-                        e.currentTarget.play().catch(() => {});
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.pause();
-                      e.currentTarget.currentTime = 0;
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+          {loading ? (
+            <div className="flex justify-center items-center h-48">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          ) : (
+            <div
+              ref={beforeAfterScrollRef}
+              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {beforeAfterCards.map((item) => (
+                <div key={item.id} className="shrink-0">
+                  <InteractiveVideoCard item={item} isDragging={isBeforeAfterDragging} />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

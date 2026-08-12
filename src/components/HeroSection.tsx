@@ -12,7 +12,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Loader2 } from "lucide-react";
+import { CloudinaryResource } from "@/lib/cloudinary"; // Path Adjust karlaleyn
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -24,17 +25,10 @@ const cinzel = Cinzel({
 });
 
 type HeroCardItem = {
-  id: number;
+  id: string;
   video: string;
+  poster: string;
 };
-
-const heroCards: HeroCardItem[] = [
-  { id: 1, video: "/videos/herovideos/herovideo1.mp4" },
-  { id: 2, video: "/videos/herovideos/herovideo2.mp4" },
-  { id: 3, video: "/videos/herovideos/herovideo3.mp4" },
-  { id: 4, video: "/videos/herovideos/herovideo4.mp4" },
-  { id: 5, video: "/videos/herovideos/herovideo5.mp4" },
-];
 
 const VISIBLE_SIDES = 2;
 
@@ -77,8 +71,37 @@ export default function HeroSection() {
   const mobileScrollRef = useRef<HTMLDivElement>(null);
   const centerCardRef = useRef<HTMLDivElement>(null);
 
+  const [heroCards, setHeroCards] = useState<HeroCardItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const centerIndex = Math.floor(heroCards.length / 2);
+
+  // Fetch Testimonial Videos from Cloudinary API
+  useEffect(() => {
+    async function fetchTestimonialVideos() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/testimonials");
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data)) {
+          // Top 5 videos map kar rahe hain
+          const formattedCards: HeroCardItem[] = data.slice(0, 5).map((item) => ({
+            id: item.public_id,
+            video: item.secure_url,
+            poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"), // Auto-generated thumbnail
+          }));
+          setHeroCards(formattedCards);
+        }
+      } catch (err) {
+        console.error("Failed to load testimonials videos:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTestimonialVideos();
+  }, []);
+
+  const centerIndex = useMemo(() => Math.floor(heroCards.length / 2), [heroCards.length]);
 
   const scrollToCenterCard = () => {
     const container = mobileScrollRef.current;
@@ -92,6 +115,8 @@ export default function HeroSection() {
   };
 
   useEffect(() => {
+    if (heroCards.length === 0) return;
+
     const timer = setTimeout(() => {
       scrollToCenterCard();
     }, 150);
@@ -105,10 +130,12 @@ export default function HeroSection() {
       clearTimeout(timer);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [heroCards]);
 
   useGSAP(
     () => {
+      if (loading || heroCards.length === 0) return;
+
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const textTargets = [
@@ -128,7 +155,7 @@ export default function HeroSection() {
         defaults: { ease: "power3.out" },
         onComplete: () => {
           scrollToCenterCard();
-        }
+        },
       });
 
       if (textTargets.length > 0) {
@@ -162,7 +189,7 @@ export default function HeroSection() {
         );
       }
     },
-    { scope: mainRef }
+    { scope: mainRef, dependencies: [loading, heroCards] }
   );
 
   const cards = useMemo(
@@ -172,13 +199,12 @@ export default function HeroSection() {
         index,
         offset: index - centerIndex,
       })),
-    [centerIndex]
+    [heroCards, centerIndex]
   );
 
   return (
     <main
       ref={mainRef}
-      /* Updated top padding for Mobile (pt-32), Small Screens (sm:pt-36), and Tablets (md:pt-44) */
       className="relative w-full min-h-screen pt-32 sm:pt-36 md:pt-44 lg:pt-48 2xl:pt-52 bg-[#06030a] text-white flex flex-col items-center justify-start overflow-hidden font-sans pb-12 sm:pb-16 2xl:pb-24 selection:bg-purple-500/30"
     >
       {/* Background Ambient Glows */}
@@ -199,18 +225,12 @@ export default function HeroSection() {
 
       {/* Main Content Area */}
       <div className="relative z-20 flex w-full max-w-7xl 2xl:max-w-[1600px] flex-col items-center justify-center text-center px-4 sm:px-6 mb-6 sm:mb-10 lg:mb-16">
-
-        {/* Updated Heading Container */}
         <div className="w-full flex justify-center items-center px-2">
           <h1
             ref={titleRef}
             className={`font-black uppercase text-center 
               text-transparent bg-clip-text bg-gradient-to-b from-white via-purple-100 to-purple-300
-              
-              /* Mobile & Tablet: Natural wrapping (2 lines) */
               text-2xl sm:text-4xl md:text-5xl whitespace-normal tracking-tight sm:tracking-normal
-              
-              /* Laptop & Desktop: Single line guaranteed without overflow */
               lg:whitespace-nowrap lg:text-[2.2vw] xl:text-[2.5vw] 2xl:text-5xl lg:tracking-tight
               ${cinzel.className}`}
             style={{ lineHeight: 1.25 }}
@@ -219,7 +239,6 @@ export default function HeroSection() {
           </h1>
         </div>
 
-        {/* Description */}
         <p
           ref={descRef}
           className="mt-3 sm:mt-5 lg:mt-6 max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed text-gray-300/85 font-light px-2"
@@ -227,7 +246,6 @@ export default function HeroSection() {
           High-impact video editing, motion graphics, and sound design. We turn your raw footage into captivating visual stories that drive real engagement.
         </p>
 
-        {/* Action Buttons */}
         <div
           ref={btnRef}
           className="mt-5 sm:mt-8 lg:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 lg:gap-5 w-full sm:w-auto px-4 sm:px-0"
@@ -262,45 +280,53 @@ export default function HeroSection() {
         aria-label="Cards Showcase"
         className="relative z-10 w-full outline-none"
       >
-        {/* DESKTOP VIEW */}
-        <div className="hidden lg:flex relative h-[480px] xl:h-[520px] 2xl:h-[620px] w-full items-end justify-center">
-          {cards.map(({ item, index, offset }) => (
-            <HeroCard
-              key={item.id}
-              item={item}
-              index={index}
-              offset={offset}
-              isPlaying={hoveredIndex === index}
-              isCenter={offset === 0}
-              onHover={setHoveredIndex}
-              isMobile={false}
-            />
-          ))}
-        </div>
-
-        {/* MOBILE & TABLET VIEW (Responsive Carousel) */}
-        <div
-          ref={mobileScrollRef}
-          className="flex lg:hidden w-full overflow-x-auto gap-3 sm:gap-5 py-6 scrollbar-none snap-x snap-mandatory items-center justify-start touch-pan-x px-[calc(50vw-110px)] sm:px-[calc(50vw-150px)] md:px-[calc(50vw-180px)]"
-        >
-          {cards.map(({ item, index, offset }) => (
-            <div
-              key={item.id}
-              ref={offset === 0 ? centerCardRef : null}
-              className="snap-center shrink-0 flex items-center justify-center"
-            >
-              <HeroCard
-                item={item}
-                index={index}
-                offset={offset}
-                isPlaying={hoveredIndex === index}
-                isCenter={offset === 0}
-                onHover={setHoveredIndex}
-                isMobile={true}
-              />
+        {loading ? (
+          <div className="flex justify-center items-center h-[300px]">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          </div>
+        ) : (
+          <>
+            {/* DESKTOP VIEW */}
+            <div className="hidden lg:flex relative h-[480px] xl:h-[520px] 2xl:h-[620px] w-full items-end justify-center">
+              {cards.map(({ item, index, offset }) => (
+                <HeroCard
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  offset={offset}
+                  isPlaying={hoveredIndex === index}
+                  isCenter={offset === 0}
+                  onHover={setHoveredIndex}
+                  isMobile={false}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+
+            {/* MOBILE & TABLET VIEW */}
+            <div
+              ref={mobileScrollRef}
+              className="flex lg:hidden w-full overflow-x-auto gap-3 sm:gap-5 py-6 scrollbar-none snap-x snap-mandatory items-center justify-start touch-pan-x px-[calc(50vw-110px)] sm:px-[calc(50vw-150px)] md:px-[calc(50vw-180px)]"
+            >
+              {cards.map(({ item, index, offset }) => (
+                <div
+                  key={item.id}
+                  ref={offset === 0 ? centerCardRef : null}
+                  className="snap-center shrink-0 flex items-center justify-center"
+                >
+                  <HeroCard
+                    item={item}
+                    index={index}
+                    offset={offset}
+                    isPlaying={hoveredIndex === index}
+                    isCenter={offset === 0}
+                    onHover={setHoveredIndex}
+                    isMobile={true}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </main>
   );
@@ -378,10 +404,11 @@ const HeroCard = memo(function HeroCard({
           <video
             ref={videoRef}
             src={item.video}
+            poster={item.poster}
             loop
             playsInline
             disablePictureInPicture
-            preload="auto"
+            preload="metadata"
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
