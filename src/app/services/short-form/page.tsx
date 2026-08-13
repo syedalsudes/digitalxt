@@ -19,10 +19,14 @@ import {
   Video,
   Film,
   Users,
-  House
+  House,
+  Loader2,
+  Play,
+  Pause
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { CloudinaryResource } from "@/lib/cloudinary";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -40,15 +44,11 @@ const heroFeatures = [
   { icon: Clock, title: "24-48hr Delivery", desc: "Fast Turnaround" },
 ];
 
-// Clean Work Videos List
-const worksList = [
-  { id: 1, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 2, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 3, video: "/videos/ourwork/workvid3.mp4" },
-  { id: 4, video: "/videos/ourwork/workvid4.mp4" },
-  { id: 5, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 6, video: "/videos/ourwork/workvid2.mp4" },
-];
+interface VideoItem {
+  id: string;
+  video: string;
+  poster: string;
+}
 
 interface FeatureItem {
   text: string;
@@ -171,6 +171,62 @@ const longFormPlans: PricingPlan[] = [
   },
 ];
 
+// Interactive Clickable Video Card Component (Vertical Reel Format with Audio & Hover Overlay)
+function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    if (isDragging || !videoRef.current) return;
+
+    if (videoRef.current.paused) {
+      videoRef.current.muted = false; // Audio enable with sound
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            videoRef.current.play();
+            setIsPlaying(true);
+          }
+        });
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <div
+      onClick={togglePlay}
+      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer shrink-0"
+    >
+      <video
+        ref={videoRef}
+        src={item.video}
+        poster={item.poster}
+        loop
+        playsInline
+        preload="metadata"
+        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
+
+      {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+          {isPlaying ? (
+            <Pause className="w-6 h-6 fill-current" />
+          ) : (
+            <Play className="w-6 h-6 fill-current ml-0.5" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Custom Hook for Ultra-Smooth Inertial Dragging
 function useDraggableScroll<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -194,7 +250,7 @@ function useDraggableScroll<T extends HTMLElement>() {
     const momentumLoop = () => {
       if (!el) return;
       el.scrollLeft -= velX;
-      velX *= 0.95; // Friction Deceleration
+      velX *= 0.95;
       if (Math.abs(velX) > 0.5) {
         reqId = requestAnimationFrame(momentumLoop);
       }
@@ -228,7 +284,7 @@ function useDraggableScroll<T extends HTMLElement>() {
       if (!isDown) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.5; // Drag Sensitivity
+      const walk = (x - startX) * 1.5;
 
       if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
         setIsDragging(true);
@@ -374,16 +430,47 @@ export default function CustomVideoEditingPage() {
   );
 }
 
-/* ================= OUR WORK SECTION (EXACT REFERENCE CODE IMPLEMENTATION) ================= */
+/* ================= OUR WORK SECTION ================= */
 
 function WorkGridSection() {
   const { ref: ourWorkScrollRef, isDragging } = useDraggableScroll<HTMLDivElement>();
+  const [customWorksList, setCustomWorksList] = useState<VideoItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Dynamic Cloudinary Fetch for Custom Folder
+  useEffect(() => {
+    async function fetchCustomVideos() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/custom");
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data)) {
+          // customhome video ko skip karke baki saari videos array me map kar rahe hain
+          const filtered = data
+            .filter((item) => !item.public_id.toLowerCase().includes("customhome"))
+            .map((item) => ({
+              id: item.public_id,
+              video: item.secure_url,
+              poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
+            }));
+
+          setCustomWorksList(filtered);
+        }
+      } catch (err) {
+        console.error("Error fetching Custom videos from Cloudinary:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchCustomVideos();
+  }, []);
 
   useEffect(() => {
     if (ourWorkScrollRef.current && ourWorkScrollRef.current.scrollWidth > ourWorkScrollRef.current.clientWidth) {
       ourWorkScrollRef.current.scrollLeft = (ourWorkScrollRef.current.scrollWidth - ourWorkScrollRef.current.clientWidth) / 2;
     }
-  }, [ourWorkScrollRef]);
+  }, [ourWorkScrollRef, customWorksList]);
 
   return (
     <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
@@ -397,50 +484,24 @@ function WorkGridSection() {
       </div>
 
       <div className="relative z-10 w-full max-w-[2200px] mx-auto">
-        <div
-          ref={ourWorkScrollRef}
-          className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {worksList.map((item) => (
-            <WorkGridCard key={item.id} item={item} isDragging={isDragging} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-48">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+          </div>
+        ) : (
+          <div
+            ref={ourWorkScrollRef}
+            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {customWorksList.map((item) => (
+              <InteractiveVideoCard key={item.id} item={item} isDragging={isDragging} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
 }
-
-function WorkGridCard({ item, isDragging }: { item: { id: number; video: string }; isDragging: boolean }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  return (
-    <div className="shrink-0">
-      <div className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300">
-        <video
-          ref={videoRef}
-          src={item.video}
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
-          onMouseEnter={(e) => {
-            if (!isDragging) {
-              e.currentTarget.muted = false;
-              e.currentTarget.play().catch(() => {});
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.pause();
-            e.currentTarget.currentTime = 0;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-      </div>
-    </div>
-  );
-}
-
 
 /* ================= PRICING CARD COMPONENT ================= */
 

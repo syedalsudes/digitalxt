@@ -318,6 +318,7 @@ export default function VideoTestimonials() {
 
   return (
     <section
+      id="testimonials"
       ref={sectionRef}
       className="relative w-full py-12 sm:py-20 2xl:py-28 bg-[#08050c] text-white border-t border-purple-950/40 overflow-hidden select-none"
     >

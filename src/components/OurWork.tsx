@@ -96,6 +96,7 @@ export default function OurWorkSection() {
 
   return (
     <section
+      id="our-work"
       ref={sectionRef}
       className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-12 sm:py-16 md:py-24 overflow-hidden selection:bg-purple-500/30"
     >

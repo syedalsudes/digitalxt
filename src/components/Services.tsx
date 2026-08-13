@@ -81,7 +81,7 @@ const servicesList: ServiceData[] = [
     portfolioLabel: "Our Portfolio",
     portfolioHref: "/services/short-form",
     pricingHref: "/services/short-form#pricing",
-    videoUrl: "/videos/ourwork/workvid3.mp4",
+    videoUrl: "https://res.cloudinary.com/dh0hbkwm/video/upload/v1786560000/customhome.mp4",
   },
 ];
 
@@ -94,7 +94,8 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
 
   const ServiceIcon = service.icon;
   const isMiddleCard = index === 1;
-  const isReel = service.id === "real-estate"; // Reel check for 9:16 aspect ratio
+  // Real Estate aur Custom Editing dono Vertical Reel (9:16) honge
+  const isReel = service.id === "real-estate" || service.id === "custom-editing"; 
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 1024) return;
@@ -128,7 +129,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.muted = false; // Enable audio with sound on play
+        videoRef.current.muted = false; // Sound enable on play
         videoRef.current.play().catch(() => {
           if (videoRef.current) {
             videoRef.current.muted = true;
@@ -251,7 +252,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Video Box (Dynamic Aspect Ratio for Vertical Reels vs Landscape) */}
+        {/* RIGHT COLUMN: Video Box (Dynamic Reel vs Landscape Aspect Ratio) */}
         <div className={`w-full flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0 ${
           isReel 
             ? "lg:w-[35%] xl:w-[32%] max-w-[280px] sm:max-w-[320px] 2xl:max-w-[380px]" 
@@ -275,7 +276,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
               className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
             />
 
-            {/* Always Visible Play Button overlay when video is paused */}
+            {/* Play Button Overlay */}
             <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 flex items-center justify-center ${isPlaying ? "opacity-0 group-hover/video:opacity-100" : "opacity-100"}`}>
               <button
                 type="button"
@@ -368,7 +369,7 @@ export default function ServicesSection() {
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full bg-[#06030a] text-white overflow-hidden selection:bg-purple-600 selection:text-white py-12 sm:py-16 md:py-24 2xl:py-32">
+    <div id="services" ref={containerRef} className="w-full bg-[#06030a] text-white overflow-hidden selection:bg-purple-600 selection:text-white py-12 sm:py-16 md:py-24 2xl:py-32">
       
       {/* MAIN TOP HEADER */}
       <div
