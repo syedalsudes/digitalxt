@@ -9,13 +9,16 @@ const cinzel = Cinzel({
 });
 
 export default function CalendlyBooking() {
+  // Environment variable se URL load karna
+  const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.com/madios/30min";
+
   return (
-    <section id="book-call" className="relative w-full py-16 bg-[#08050c] text-white flex flex-col items-center justify-center">
+    <section id="book-call" className="relative w-full py-16 bg-[#08050c] text-white flex flex-col items-center justify-center overflow-x-hidden">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-purple-600/10 blur-[160px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
-        {/* Compact Title Bar (Side-by-side) */}
+        {/* Compact Title Bar (Original Exact Layout) */}
         <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-6 border-b border-purple-500/20">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-purple-400 font-semibold mb-1">
@@ -30,20 +33,20 @@ export default function CalendlyBooking() {
           </p>
         </div>
 
-        {/* Deck Frame */}
-        <div className="w-full rounded-2xl overflow-hidden border border-purple-500/20 bg-[#0e0918] shadow-2xl">
+        {/* Deck Frame - Increased Height for Full Box Fit */}
+        <div className="w-full rounded-2xl overflow-hidden border border-purple-500/20 bg-[#08050c] shadow-2xl [filter:invert(0.92)_hue-rotate(180deg)]">
           <InlineWidget
-            url="https://calendly.com/syedalsudes32/30min"
+            url={calendlyUrl}
             styles={{
-              height: "680px",
+              height: "780px",
               width: "100%",
             }}
             pageSettings={{
-              backgroundColor: "0e0918",
+              backgroundColor: "ffffff", 
               hideEventTypeDetails: false,
               hideLandingPageDetails: false,
-              primaryColor: "a855f7",
-              textColor: "a855f7"
+              primaryColor: "a855f7",    
+              textColor: "000000"        
             }}
           />
         </div>
