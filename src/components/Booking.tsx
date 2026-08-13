@@ -5,12 +5,12 @@ import { Cinzel } from "next/font/google";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
-  weight: ["700"],
+  weight: "700",
 });
 
 export default function CalendlyBooking() {
   // Environment variable se URL load karna
-  const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL || "https://calendly.com/madios/30min";
+  const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL!;
 
   return (
     <section id="book-call" className="relative w-full py-16 bg-[#08050c] text-white flex flex-col items-center justify-center overflow-x-hidden">
