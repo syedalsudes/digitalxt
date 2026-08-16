@@ -156,11 +156,11 @@ export default function OurWorkSection() {
       <div ref={buttonRef} className="z-10 mt-10 sm:mt-14 md:mt-20 shrink-0 relative group/btn px-4">
         <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
         <Link
-          href="/services"
+          href="/#book-call"
           className="relative inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider text-white overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 border border-purple-400/30 bg-[#120824]/90"
         >
           <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-out bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12" />
-          <span className="relative z-10">View Full Portfolio</span>
+          <span className="relative z-10">Craft Your Next Story</span>
           <ArrowUpRight className="relative z-10 w-3.5 sm:w-4 h-3.5 sm:h-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
         </Link>
       </div>
@@ -168,7 +168,7 @@ export default function OurWorkSection() {
   );
 }
 
-{/* Individual Video Card Component */}
+{/* Individual Video Card Component */ }
 function WorkCard({
   item,
   offset,
@@ -187,7 +187,7 @@ function WorkCard({
       videoRef.current.play().catch(() => {
         if (videoRef.current) {
           videoRef.current.muted = true;
-          videoRef.current.play().catch(() => {});
+          videoRef.current.play().catch(() => { });
         }
       });
     }
@@ -263,11 +263,10 @@ function WorkCard({
       }}
     >
       <div
-        className={`relative w-full h-full transition-all duration-500 ${
-          isCenter
+        className={`relative w-full h-full transition-all duration-500 ${isCenter
             ? "drop-shadow-[0_15px_30px_rgba(168,85,247,0.45)]"
             : "hover:opacity-100"
-        }`}
+          }`}
       >
         <div className="relative w-full h-full">
           <div

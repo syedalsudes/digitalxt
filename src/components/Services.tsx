@@ -42,7 +42,7 @@ const servicesList: ServiceData[] = [
     icon: House,
     brief: "Cinematic real estate property tours engineered to captivate buyers and close high-ticket deals faster.",
     points: [
-      "Premium Texturing with 4 to 5 Distinct Variations",
+      "Premium Texting with 4 to 5 Distinct Variations",
       "30 - 60 Seconds Max High-Impact Editing",
       "Dynamic Speed Ramping & Seamless Transitions",
       "1 - 2 AI Virtual Staging Enhancements"

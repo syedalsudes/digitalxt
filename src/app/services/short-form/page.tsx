@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
 import {
@@ -22,7 +22,9 @@ import {
   House,
   Loader2,
   Play,
-  Pause
+  Pause,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -171,7 +173,7 @@ const longFormPlans: PricingPlan[] = [
   },
 ];
 
-// Interactive Clickable Video Card Component (Vertical Reel Format with Audio & Hover Overlay)
+// Interactive Clickable Video Card Component
 function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -180,7 +182,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
     if (isDragging || !videoRef.current) return;
 
     if (videoRef.current.paused) {
-      videoRef.current.muted = false; // Audio enable with sound
+      videoRef.current.muted = false;
       videoRef.current
         .play()
         .then(() => setIsPlaying(true))
@@ -200,7 +202,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
   return (
     <div
       onClick={togglePlay}
-      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer shrink-0"
+      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer shrink-0 select-none"
     >
       <video
         ref={videoRef}
@@ -213,7 +215,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
+      {/* Play/Pause Button Overlay strictly on Hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
         <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
           {isPlaying ? (
@@ -227,89 +229,87 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
   );
 }
 
-// Custom Hook for Ultra-Smooth Inertial Dragging
-function useDraggableScroll<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
+// 3-in-1 Carousel Hook (Pointer Drag, Horizontal Wheel, & Buttons)
+function useCarouselController() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const velXRef = useRef(0);
+  const lastXRef = useRef(0);
+  const rafIdRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+  const stopMomentum = () => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  };
 
-    let isDown = false;
-    let startX = 0;
-    let scrollLeft = 0;
-    let velX = 0;
-    let lastX = 0;
-    let reqId: number;
+  const momentumLoop = () => {
+    if (!containerRef.current) return;
+    containerRef.current.scrollLeft -= velXRef.current;
+    velXRef.current *= 0.92;
+    if (Math.abs(velXRef.current) > 0.5) {
+      rafIdRef.current = requestAnimationFrame(momentumLoop);
+    }
+  };
 
-    const stopMomentum = () => {
-      cancelAnimationFrame(reqId);
-    };
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    stopMomentum();
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - containerRef.current.offsetLeft;
+    scrollLeftRef.current = containerRef.current.scrollLeft;
+    lastXRef.current = e.pageX;
+    velXRef.current = 0;
+  };
 
-    const momentumLoop = () => {
-      if (!el) return;
-      el.scrollLeft -= velX;
-      velX *= 0.95;
-      if (Math.abs(velX) > 0.5) {
-        reqId = requestAnimationFrame(momentumLoop);
-      }
-    };
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.3;
 
-    const onMouseDown = (e: MouseEvent) => {
-      isDown = true;
-      setIsDragging(false);
+    if (Math.abs(x - (startXRef.current + containerRef.current.offsetLeft)) > 4) {
+      if (!isDragging) setIsDragging(true);
+    }
+
+    containerRef.current.scrollLeft = scrollLeftRef.current - walk;
+    velXRef.current = e.pageX - lastXRef.current;
+    lastXRef.current = e.pageX;
+  };
+
+  const handlePointerUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setTimeout(() => setIsDragging(false), 50);
+    rafIdRef.current = requestAnimationFrame(momentumLoop);
+  };
+
+  const scrollByAmount = useCallback((offset: number) => {
+    if (containerRef.current) {
       stopMomentum();
-      startX = e.pageX - el.offsetLeft;
-      scrollLeft = el.scrollLeft;
-      lastX = e.pageX;
-      velX = 0;
-    };
-
-    const onMouseLeave = () => {
-      if (!isDown) return;
-      isDown = false;
-      setIsDragging(false);
-      reqId = requestAnimationFrame(momentumLoop);
-    };
-
-    const onMouseUp = () => {
-      if (!isDown) return;
-      isDown = false;
-      setTimeout(() => setIsDragging(false), 50);
-      reqId = requestAnimationFrame(momentumLoop);
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.5;
-
-      if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
-        setIsDragging(true);
-      }
-
-      el.scrollLeft = scrollLeft - walk;
-      velX = e.pageX - lastX;
-      lastX = e.pageX;
-    };
-
-    el.addEventListener("mousedown", onMouseDown);
-    el.addEventListener("mouseleave", onMouseLeave);
-    el.addEventListener("mouseup", onMouseUp);
-    el.addEventListener("mousemove", onMouseMove);
-
-    return () => {
-      el.removeEventListener("mousedown", onMouseDown);
-      el.removeEventListener("mouseleave", onMouseLeave);
-      el.removeEventListener("mouseup", onMouseUp);
-      el.removeEventListener("mousemove", onMouseMove);
-      stopMomentum();
-    };
+      containerRef.current.scrollBy({
+        left: offset,
+        behavior: "smooth",
+      });
+    }
   }, []);
 
-  return { ref, isDragging };
+  return {
+    ref: containerRef,
+    isDragging,
+    scrollByAmount,
+    events: {
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerUp,
+      onPointerLeave: handlePointerUp,
+      onPointerCancel: handlePointerUp,
+    }
+  };
 }
 
 export default function CustomVideoEditingPage() {
@@ -336,7 +336,6 @@ export default function CustomVideoEditingPage() {
 
   return (
     <div ref={pageRef} className="w-full bg-[#06030a] text-white min-h-screen selection:bg-purple-600 selection:text-white overflow-hidden">
-      
       {/* Background Glow */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[600px] md:w-[1000px] 2xl:w-[1400px] h-[400px] 2xl:h-[600px] bg-purple-600/10 blur-[180px] rounded-full pointer-events-none z-0" />
 
@@ -417,7 +416,7 @@ export default function CustomVideoEditingPage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK (MATCHED STYLING & DRAGGABLE LIKE REFERENCE) ================= */}
+      {/* ================= OUR WORK SECTION ================= */}
       <WorkGridSection />
 
       {/* PACKAGES SECTION */}
@@ -430,14 +429,19 @@ export default function CustomVideoEditingPage() {
   );
 }
 
-/* ================= OUR WORK SECTION ================= */
+/* ================= OUR WORK SECTION (DRAGGABLE + FLOATING CORNER BUTTONS) ================= */
 
 function WorkGridSection() {
-  const { ref: ourWorkScrollRef, isDragging } = useDraggableScroll<HTMLDivElement>();
+  const {
+    ref: ourWorkScrollRef,
+    isDragging,
+    scrollByAmount,
+    events
+  } = useCarouselController();
+
   const [customWorksList, setCustomWorksList] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Dynamic Cloudinary Fetch for Custom Folder
   useEffect(() => {
     async function fetchCustomVideos() {
       try {
@@ -445,7 +449,6 @@ function WorkGridSection() {
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          // customhome video ko skip karke baki saari videos array me map kar rahe hain
           const filtered = data
             .filter((item) => !item.public_id.toLowerCase().includes("customhome"))
             .map((item) => ({
@@ -468,7 +471,8 @@ function WorkGridSection() {
 
   useEffect(() => {
     if (ourWorkScrollRef.current && ourWorkScrollRef.current.scrollWidth > ourWorkScrollRef.current.clientWidth) {
-      ourWorkScrollRef.current.scrollLeft = (ourWorkScrollRef.current.scrollWidth - ourWorkScrollRef.current.clientWidth) / 2;
+      ourWorkScrollRef.current.scrollLeft =
+        (ourWorkScrollRef.current.scrollWidth - ourWorkScrollRef.current.clientWidth) / 2;
     }
   }, [ourWorkScrollRef, customWorksList]);
 
@@ -483,7 +487,26 @@ function WorkGridSection() {
         </h2>
       </div>
 
-      <div className="relative z-10 w-full max-w-[2200px] mx-auto">
+      {/* Relative Container with Floating Edge Action Buttons */}
+      <div className="relative z-10 w-full max-w-[2200px] mx-auto px-2 sm:px-4 group/carousel">
+        {/* Floating Left Button */}
+        <button
+          onClick={() => scrollByAmount(-450)}
+          aria-label="Previous Videos"
+          className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
+        {/* Floating Right Button */}
+        <button
+          onClick={() => scrollByAmount(450)}
+          aria-label="Next Videos"
+          className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
         {loading ? (
           <div className="flex justify-center items-center h-48">
             <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
@@ -491,7 +514,8 @@ function WorkGridSection() {
         ) : (
           <div
             ref={ourWorkScrollRef}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            {...events}
+            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {customWorksList.map((item) => (
               <InteractiveVideoCard key={item.id} item={item} isDragging={isDragging} />
@@ -503,15 +527,20 @@ function WorkGridSection() {
   );
 }
 
-/* ================= PRICING CARD COMPONENT ================= */
+/* ================= PRICING CARD COMPONENT (Hydration Safe) ================= */
 
 function PricingCard({ plan }: { plan: PricingPlan }) {
+  const [mounted, setMounted] = useState(false);
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (window.innerWidth < 1024) return;
+    if (!mounted || window.innerWidth < 1024) return;
 
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -549,7 +578,9 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+        transform: mounted
+          ? `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+          : undefined,
       }}
       className={`pricing-card-inner group relative p-[1.5px] transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] 2xl:max-w-[420px] shrink-0 lg:hover:scale-105 lg:hover:z-50 ${
         plan.isPopular ? "z-20" : "z-10"
@@ -637,7 +668,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
                     }`}
                   />
                 </div>
-                <span className={feature.included ? "text-gray-300" : "text-gray-500"}>
+                <span className={feature.included ? "text-gray-300 font-medium" : "text-gray-500"}>
                   {feature.text}
                 </span>
               </li>
@@ -671,8 +702,6 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
 /* ================= PRICING PACKAGES SECTION ================= */
 
 function PricingPackagesSection() {
-  const cardsWrapperRef = useRef<HTMLDivElement>(null);
-
   return (
     <section className="relative w-full bg-[#06030a] text-white border-t border-purple-950/40 overflow-hidden flex flex-col justify-start pt-16 pb-20 md:pt-24 md:pb-32 2xl:pt-36 2xl:pb-44">
       <div className={`z-10 text-center max-w-5xl 2xl:max-w-7xl mx-auto flex flex-col items-center shrink-0 px-4 mb-10 lg:mb-16 2xl:mb-20 ${cinzel.className}`}>
@@ -694,10 +723,7 @@ function PricingPackagesSection() {
               Short-Form Packages (Reels / Shorts)
             </h3>
           </div>
-          <div
-            ref={cardsWrapperRef}
-            className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 2xl:gap-10 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0"
-          >
+          <div className="flex lg:grid lg:grid-cols-3 gap-6 lg:gap-6 2xl:gap-10 w-full items-stretch justify-start lg:justify-items-center overflow-x-auto lg:overflow-visible pb-6 lg:pb-0 scrollbar-none snap-x snap-mandatory px-2 lg:px-0">
             {shortFormPlans.map((plan) => (
               <div key={plan.id} className="snap-center shrink-0 flex justify-center">
                 <PricingCard plan={plan} />
@@ -725,7 +751,6 @@ function PricingPackagesSection() {
 
         {/* ACTION BUTTONS BELOW PACKAGES */}
         <div className="max-w-4xl 2xl:max-w-6xl mx-auto pt-8 2xl:pt-12 px-4 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 2xl:gap-8">
-          
           <div className="shrink-0 relative group/btn w-full sm:w-auto">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
             <Link
@@ -749,7 +774,6 @@ function PricingPackagesSection() {
               <ArrowUpRight className="relative z-10 w-4 h-4 2xl:w-6 2xl:h-6 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 text-purple-300" />
             </Link>
           </div>
-
         </div>
       </div>
     </section>
@@ -783,7 +807,6 @@ function WhiteLabelAgencySection() {
 
       <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 relative z-10">
         <div className="group relative p-[1.5px] transition-all duration-500">
-          
           <div 
             className="absolute inset-0 bg-gradient-to-br from-purple-500 via-fuchsia-500 to-purple-800 opacity-80 group-hover:opacity-100 shadow-[0_0_40px_rgba(168,85,247,0.3)] transition-all duration-500"
             style={{ clipPath: "polygon(36px 0, 100% 0, 100% calc(100% - 36px), calc(100% - 36px) 100%, 0 100%, 0 36px)" }}
@@ -844,7 +867,6 @@ function WhiteLabelAgencySection() {
 
             <div className="absolute bottom-0 left-16 w-20 2xl:w-28 h-[2px] bg-purple-400 shadow-[0_0_12px_#a855f7]" />
           </div>
-
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
 import {
@@ -9,7 +9,6 @@ import {
   Video,
   Wand2,
   Volume2,
-  Gauge,
   Layers,
   Clock,
   ArrowRight,
@@ -20,7 +19,10 @@ import {
   RotateCcw,
   Loader2,
   Play,
-  Pause
+  Pause,
+  Music,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,10 +36,10 @@ const cinzel = Cinzel({ subsets: ["latin"], weight: ["700", "900"] });
 
 // --- DATA CONFIGURATIONS ---
 const heroFeatures = [
-  { icon: Video, title: "Premium Texturing", desc: "4-5 Variations" },
+  { icon: Video, title: "Premium Texting", desc: "4-5 Variations" },
   { icon: Wand2, title: "AI Staging", desc: "1-2 Concepts" },
-  { icon: Volume2, title: "Sound Design", desc: "Color Grading" },
-  { icon: Gauge, title: "Speed Ramping", desc: "Licensed Music" },
+  { icon: Volume2, title: "Sound Design", desc: "SFX & Audio Polish" },
+  { icon: Music, title: "Licensed Music", desc: "Copyright cleared" },
   { icon: Layers, title: "Transitions", desc: "Seamless Flow" },
   { icon: Clock, title: "24-48hr Delivery", desc: "Per Video" },
 ];
@@ -75,7 +77,7 @@ const pricingPlans: PricingPlan[] = [
     perVideoPrice: "$30/Video",
     description: "Ideal for individual property tours & quick listings.",
     features: [
-      { text: "4-5 Premium Texturing Variations", included: true },
+      { text: "4-5 Premium Texting Variations", included: true },
       { text: "High-Impact Speed Ramping", included: true },
       { text: "AI Virtual Staging Enhancements", included: true },
       { text: "Unlimited Free Revisions", included: true },
@@ -92,7 +94,7 @@ const pricingPlans: PricingPlan[] = [
     perVideoPrice: "$25/Video",
     description: "Perfect for active agents & luxury property showcases.",
     features: [
-      { text: "4-5 Premium Texturing Variations", included: true },
+      { text: "4-5 Premium Texting Variations", included: true },
       { text: "High-Impact Speed Ramping", included: true },
       { text: "AI Virtual Staging Enhancements", included: true },
       { text: "Unlimited Free Revisions", included: true },
@@ -109,7 +111,7 @@ const pricingPlans: PricingPlan[] = [
     perVideoPrice: "$23.3/Video",
     description: "Complete video content solution for real estate teams.",
     features: [
-      { text: "4-5 Premium Texturing Variations", included: true },
+      { text: "4-5 Premium Texting Variations", included: true },
       { text: "High-Impact Speed Ramping", included: true },
       { text: "AI Virtual Staging Enhancements", included: true },
       { text: "Unlimited Free Revisions", included: true },
@@ -119,7 +121,7 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
-// Interactive Clickable Video Card Component (Play/Pause button strictly visible ONLY on Hover)
+// Interactive Clickable Video Card
 function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -128,7 +130,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
     if (isDragging || !videoRef.current) return;
 
     if (videoRef.current.paused) {
-      videoRef.current.muted = false; // Enable audio with sound
+      videoRef.current.muted = false;
       videoRef.current
         .play()
         .then(() => setIsPlaying(true))
@@ -148,7 +150,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
   return (
     <div
       onClick={togglePlay}
-      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer"
+      className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer select-none"
     >
       <video
         ref={videoRef}
@@ -161,7 +163,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
 
-      {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
+      {/* Play/Pause Button Overlay strictly on Hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
         <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
           {isPlaying ? (
@@ -175,89 +177,87 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
   );
 }
 
-// Custom Hook for Ultra-Smooth Inertial Dragging
-function useDraggableScroll<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
+// 3-in-1 Carousel Hook (Pointer Drag, Horizontal Wheel, & Buttons)
+function useCarouselController() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const velXRef = useRef(0);
+  const lastXRef = useRef(0);
+  const rafIdRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+  const stopMomentum = () => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  };
 
-    let isDown = false;
-    let startX = 0;
-    let scrollLeft = 0;
-    let velX = 0;
-    let lastX = 0;
-    let reqId: number;
+  const momentumLoop = () => {
+    if (!containerRef.current) return;
+    containerRef.current.scrollLeft -= velXRef.current;
+    velXRef.current *= 0.92;
+    if (Math.abs(velXRef.current) > 0.5) {
+      rafIdRef.current = requestAnimationFrame(momentumLoop);
+    }
+  };
 
-    const stopMomentum = () => {
-      cancelAnimationFrame(reqId);
-    };
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    stopMomentum();
+    isDraggingRef.current = true;
+    startXRef.current = e.pageX - containerRef.current.offsetLeft;
+    scrollLeftRef.current = containerRef.current.scrollLeft;
+    lastXRef.current = e.pageX;
+    velXRef.current = 0;
+  };
 
-    const momentumLoop = () => {
-      if (!el) return;
-      el.scrollLeft -= velX;
-      velX *= 0.95;
-      if (Math.abs(velX) > 0.5) {
-        reqId = requestAnimationFrame(momentumLoop);
-      }
-    };
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startXRef.current) * 1.3;
 
-    const onMouseDown = (e: MouseEvent) => {
-      isDown = true;
-      setIsDragging(false);
+    if (Math.abs(x - (startXRef.current + containerRef.current.offsetLeft)) > 4) {
+      if (!isDragging) setIsDragging(true);
+    }
+
+    containerRef.current.scrollLeft = scrollLeftRef.current - walk;
+    velXRef.current = e.pageX - lastXRef.current;
+    lastXRef.current = e.pageX;
+  };
+
+  const handlePointerUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setTimeout(() => setIsDragging(false), 50);
+    rafIdRef.current = requestAnimationFrame(momentumLoop);
+  };
+
+  const scrollByAmount = useCallback((offset: number) => {
+    if (containerRef.current) {
       stopMomentum();
-      startX = e.pageX - el.offsetLeft;
-      scrollLeft = el.scrollLeft;
-      lastX = e.pageX;
-      velX = 0;
-    };
-
-    const onMouseLeave = () => {
-      if (!isDown) return;
-      isDown = false;
-      setIsDragging(false);
-      reqId = requestAnimationFrame(momentumLoop);
-    };
-
-    const onMouseUp = () => {
-      if (!isDown) return;
-      isDown = false;
-      setTimeout(() => setIsDragging(false), 50);
-      reqId = requestAnimationFrame(momentumLoop);
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - el.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      
-      if (Math.abs(x - (startX + el.offsetLeft)) > 5) {
-        setIsDragging(true);
-      }
-
-      el.scrollLeft = scrollLeft - walk;
-      velX = e.pageX - lastX;
-      lastX = e.pageX;
-    };
-
-    el.addEventListener("mousedown", onMouseDown);
-    el.addEventListener("mouseleave", onMouseLeave);
-    el.addEventListener("mouseup", onMouseUp);
-    el.addEventListener("mousemove", onMouseMove);
-
-    return () => {
-      el.removeEventListener("mousedown", onMouseDown);
-      el.removeEventListener("mouseleave", onMouseLeave);
-      el.removeEventListener("mouseup", onMouseUp);
-      el.removeEventListener("mousemove", onMouseMove);
-      stopMomentum();
-    };
+      containerRef.current.scrollBy({
+        left: offset,
+        behavior: "smooth",
+      });
+    }
   }, []);
 
-  return { ref, isDragging };
+  return {
+    ref: containerRef,
+    isDragging,
+    scrollByAmount,
+    events: {
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerUp,
+      onPointerLeave: handlePointerUp,
+      onPointerCancel: handlePointerUp,
+    }
+  };
 }
 
 export default function RealEstateServicePage() {
@@ -268,8 +268,19 @@ export default function RealEstateServicePage() {
   const [beforeAfterCards, setBeforeAfterCards] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { ref: ourWorkScrollRef, isDragging: isOurWorkDragging } = useDraggableScroll<HTMLDivElement>();
-  const { ref: beforeAfterScrollRef, isDragging: isBeforeAfterDragging } = useDraggableScroll<HTMLDivElement>();
+  const {
+    ref: ourWorkScrollRef,
+    isDragging: isOurWorkDragging,
+    scrollByAmount: scrollOurWork,
+    events: ourWorkEvents
+  } = useCarouselController();
+
+  const {
+    ref: beforeAfterScrollRef,
+    isDragging: isBeforeAfterDragging,
+    scrollByAmount: scrollBeforeAfter,
+    events: beforeAfterEvents
+  } = useCarouselController();
 
   // Cloudinary Fetch and Filter Logic
   useEffect(() => {
@@ -422,7 +433,7 @@ export default function RealEstateServicePage() {
         </div>
       </section>
 
-      {/* ================= OUR WORK (DRAGGABLE) ================= */}
+      {/* ================= OUR WORK SECTION ================= */}
       <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
@@ -433,7 +444,26 @@ export default function RealEstateServicePage() {
           </h2>
         </div>
 
-        <div className="relative z-10 w-full max-w-[2200px] mx-auto">
+        {/* Relative Container with Edge Action Buttons */}
+        <div className="relative z-10 w-full max-w-[2200px] mx-auto px-2 sm:px-4 group/carousel">
+          {/* Edge Floating Left Button */}
+          <button
+            onClick={() => scrollOurWork(-450)}
+            aria-label="Previous Videos"
+            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Edge Floating Right Button */}
+          <button
+            onClick={() => scrollOurWork(450)}
+            aria-label="Next Videos"
+            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
           {loading ? (
             <div className="flex justify-center items-center h-48">
               <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
@@ -441,7 +471,8 @@ export default function RealEstateServicePage() {
           ) : (
             <div
               ref={ourWorkScrollRef}
-              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              {...ourWorkEvents}
+              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {ourWorkList.map((item) => (
                 <div key={item.id} className="shrink-0">
@@ -453,7 +484,7 @@ export default function RealEstateServicePage() {
         </div>
       </section>
 
-      {/* ================= BEFORE / AFTER (DRAGGABLE) ================= */}
+      {/* ================= BEFORE / AFTER SECTION ================= */}
       <section className="relative z-10 w-full py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 bg-[#06030a] select-none">
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
@@ -464,7 +495,26 @@ export default function RealEstateServicePage() {
           </h2>
         </div>
 
-        <div className="relative z-10 w-full max-w-[2200px] mx-auto">
+        {/* Relative Container with Edge Action Buttons */}
+        <div className="relative z-10 w-full max-w-[2200px] mx-auto px-2 sm:px-4 group/carousel">
+          {/* Edge Floating Left Button */}
+          <button
+            onClick={() => scrollBeforeAfter(-450)}
+            aria-label="Previous Transformations"
+            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Edge Floating Right Button */}
+          <button
+            onClick={() => scrollBeforeAfter(450)}
+            aria-label="Next Transformations"
+            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
           {loading ? (
             <div className="flex justify-center items-center h-48">
               <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
@@ -472,7 +522,8 @@ export default function RealEstateServicePage() {
           ) : (
             <div
               ref={beforeAfterScrollRef}
-              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-4 sm:px-8 md:px-12 lg:px-16 2xl:px-20 pb-6 items-center justify-start 2xl:justify-center scrollbar-none cursor-grab active:cursor-grabbing select-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              {...beforeAfterEvents}
+              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {beforeAfterCards.map((item) => (
                 <div key={item.id} className="shrink-0">
@@ -490,14 +541,19 @@ export default function RealEstateServicePage() {
   );
 }
 
-/* ================= PRICING CARD COMPONENT ================= */
+/* ================= PRICING CARD COMPONENT (Hydration Safe) ================= */
 function PricingCard({ plan }: { plan: PricingPlan }) {
+  const [mounted, setMounted] = useState(false);
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (window.innerWidth < 1024) return;
+    if (!mounted || window.innerWidth < 1024) return;
 
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
@@ -535,7 +591,9 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+        transform: mounted
+          ? `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+          : undefined,
       }}
       className={`pricing-card-inner group relative p-[1.5px] transition-transform duration-300 ease-out cursor-pointer h-full w-[290px] sm:w-[320px] lg:w-full lg:max-w-[340px] 2xl:max-w-[420px] shrink-0 lg:hover:scale-105 lg:hover:z-50 ${
         plan.isPopular ? "z-20" : "z-10"
@@ -686,15 +744,14 @@ function PricingPackagesSection() {
         <div className="max-w-4xl 2xl:max-w-6xl mx-auto mt-16 sm:mt-20 2xl:mt-28 px-4 flex flex-col items-center">
           <div className="w-full relative p-6 sm:p-8 2xl:p-12 rounded-3xl border border-purple-500/30 bg-[#0a0514]/80 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
-              
               <div className="flex items-start gap-4 2xl:gap-5">
                 <div className="w-10 h-10 2xl:w-14 2xl:h-14 rounded-2xl bg-purple-950/80 border border-purple-400/40 flex items-center justify-center shrink-0 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
                   <CreditCard className="w-5 h-5 2xl:w-7 2xl:h-7 stroke-[1.75]" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold text-sm 2xl:text-lg mb-1">Credit-Based Count</h4>
+                  <h4 className="text-white font-bold text-sm 2xl:text-lg mb-1">Credit Based Count</h4>
                   <p className="text-gray-300 text-xs 2xl:text-sm leading-relaxed font-light">
-                    Videos are counted as credits. <strong className="text-purple-300 font-semibold">1 video = 1 credit</strong>.
+                    Videos are counted as credits. <br /><strong className="text-purple-300 font-semibold">1 video = 1 credit</strong>.
                   </p>
                 </div>
               </div>
@@ -706,7 +763,7 @@ function PricingPackagesSection() {
                 <div>
                   <h4 className="text-white font-bold text-sm 2xl:text-lg mb-1">No Time Limit</h4>
                   <p className="text-gray-300 text-xs 2xl:text-sm leading-relaxed font-light">
-                    Credits <strong className="text-purple-300 font-semibold">don't expire</strong>. Use them anytime you want a video to be edited.
+                    Credits <strong className="text-purple-300 font-semibold">don't expire</strong>. Use them anytime you want your video to be edited.
                   </p>
                 </div>
               </div>
@@ -722,7 +779,6 @@ function PricingPackagesSection() {
                   </p>
                 </div>
               </div>
-
             </div>
           </div>
 
