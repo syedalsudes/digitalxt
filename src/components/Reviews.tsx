@@ -144,8 +144,8 @@ export default function VideoTestimonials() {
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          // Shuru ki 5 videos skip karke baqi testimonials load karein
-          const fetchedTestimonials: Testimonial[] = data.slice(5).map((item) => ({
+          // Ab saari videos bina kisi skip ke load hongi
+          const fetchedTestimonials: Testimonial[] = data.map((item) => ({
             id: item.public_id,
             videoSrc: item.secure_url,
             poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
@@ -230,9 +230,8 @@ export default function VideoTestimonials() {
           scale: 1,
           duration: 0.9,
           ease: "back.out(1.2)",
-        },
-        "-=0.4"
-      );
+        }
+      , "-=0.4");
     }, sectionRef);
 
     return () => {

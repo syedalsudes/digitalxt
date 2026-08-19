@@ -77,16 +77,17 @@ export default function HeroSection() {
   // Track which card is playing by its unique ID
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
-  // Fetch Testimonial Videos from Cloudinary API
+ // Fetch Hero Videos from Cloudinary API
   useEffect(() => {
-    async function fetchTestimonialVideos() {
+    async function fetchHeroVideos() {
       try {
-        const res = await fetch("/api/videos?folder=Digitalixstudio/testimonials");
+        // Path ko 'hero' folder par change karein
+        const res = await fetch("/api/videos?folder=Digitalixstudio/hero");
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          // Hero section ke liye shuru ki 5 videos
-          const formattedCards: HeroCardItem[] = data.slice(0, 5).map((item) => ({
+          // Folder ki saari videos map kar lein
+          const formattedCards: HeroCardItem[] = data.map((item) => ({
             id: item.public_id,
             video: item.secure_url,
             poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
@@ -94,13 +95,13 @@ export default function HeroSection() {
           setHeroCards(formattedCards);
         }
       } catch (err) {
-        console.error("Failed to load testimonials videos:", err);
+        console.error("Failed to load hero videos:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTestimonialVideos();
+    fetchHeroVideos();
   }, []);
 
   // Middle card fixed index (index 2 for 5 items)
