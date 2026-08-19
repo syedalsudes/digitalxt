@@ -90,12 +90,37 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
   const [rotateY, setRotateY] = useState(0);
   const [spotlightPos, setSpotlightPos] = useState({ x: 50, y: 50 });
   const [isPlaying, setIsPlaying] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const ServiceIcon = service.icon;
   const isMiddleCard = index === 1;
-  // Real Estate aur Custom Editing dono Vertical Reel (9:16) honge
   const isReel = service.id === "real-estate" || service.id === "custom-editing"; 
+
+  // Auto-pause video jab card viewport se bahar scroll ho jaye
+  useEffect(() => {
+    const cardEl = cardRef.current;
+    if (!cardEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            if (videoRef.current) {
+              videoRef.current.pause();
+              videoRef.current.currentTime = 0;
+              videoRef.current.muted = true;
+            }
+            setIsPlaying(false);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(cardEl);
+    return () => observer.disconnect();
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (window.innerWidth < 1024) return;
@@ -128,16 +153,20 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
+        setIsPlaying(false);
       } else {
-        videoRef.current.muted = false; // Sound enable on play
-        videoRef.current.play().catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play();
-          }
-        });
+        videoRef.current.muted = false;
+        videoRef.current
+          .play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              videoRef.current.play().catch(() => {});
+              setIsPlaying(true);
+            }
+          });
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -146,6 +175,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
 
   return (
     <div
+      ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -252,7 +282,7 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Video Box (Dynamic Reel vs Landscape Aspect Ratio) */}
+        {/* RIGHT COLUMN: Video Box */}
         <div className={`w-full flex flex-col justify-center items-center z-10 shrink-0 mx-auto lg:mx-0 ${
           isReel 
             ? "lg:w-[35%] xl:w-[32%] max-w-[280px] sm:max-w-[320px] 2xl:max-w-[380px]" 

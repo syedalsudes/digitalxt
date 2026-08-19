@@ -121,35 +121,48 @@ const pricingPlans: PricingPlan[] = [
   },
 ];
 
-// Interactive Clickable Video Card
-function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
+// Interactive Clickable Video Card Component with Controlled Single-Playback State
+function InteractiveVideoCard({
+  item,
+  isPlaying,
+  onTogglePlay,
+  isDragging,
+}: {
+  item: VideoItem;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  isDragging: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  const togglePlay = () => {
-    if (isDragging || !videoRef.current) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-    if (videoRef.current.paused) {
-      videoRef.current.muted = false;
-      videoRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play();
-            setIsPlaying(true);
-          }
+    if (isPlaying) {
+      video.muted = false;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
         });
+      }
     } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
+      video.pause();
+      video.currentTime = 0;
+      video.muted = true;
     }
+  }, [isPlaying]);
+
+  const handleClick = () => {
+    if (isDragging) return;
+    onTogglePlay();
   };
 
   return (
     <div
-      onClick={togglePlay}
+      onClick={handleClick}
       className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer select-none"
     >
       <video
@@ -165,7 +178,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
 
       {/* Play/Pause Button Overlay strictly on Hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
-        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110">
           {isPlaying ? (
             <Pause className="w-6 h-6 fill-current" />
           ) : (
@@ -262,11 +275,16 @@ function useCarouselController() {
 
 export default function RealEstateServicePage() {
   const pageRef = useRef<HTMLDivElement>(null);
+  const ourWorkSectionRef = useRef<HTMLDivElement>(null);
+  const beforeAfterSectionRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLDivElement>(null);
 
   const [ourWorkList, setOurWorkList] = useState<VideoItem[]>([]);
   const [beforeAfterCards, setBeforeAfterCards] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Single playing video tracker across the entire page
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   const {
     ref: ourWorkScrollRef,
@@ -324,6 +342,32 @@ export default function RealEstateServicePage() {
     fetchRealEstateMedia();
   }, []);
 
+  // Viewport Observer: Screen se bahar hote hi playing video auto-pause ho jaye
+  useEffect(() => {
+    const sections = [ourWorkSectionRef.current, beforeAfterSectionRef.current].filter(Boolean) as HTMLDivElement[];
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            // Check if playing video belongs to the section that scrolled out
+            const sectionVideos = entry.target.querySelectorAll("video");
+            sectionVideos.forEach((vid) => {
+              if (!vid.paused) {
+                setPlayingVideoId(null);
+              }
+            });
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    sections.forEach((sec) => observer.observe(sec));
+    return () => observer.disconnect();
+  }, [ourWorkList, beforeAfterCards]);
+
   useEffect(() => {
     const centerScroll = (el: HTMLDivElement | null) => {
       if (el && el.scrollWidth > el.clientWidth) {
@@ -350,6 +394,10 @@ export default function RealEstateServicePage() {
     }, pageRef);
     return () => ctx.revert();
   }, []);
+
+  const handleTogglePlay = (id: string) => {
+    setPlayingVideoId((prevId) => (prevId === id ? null : id));
+  };
 
   return (
     <div ref={pageRef} className="w-full bg-[#06030a] text-white min-h-screen selection:bg-purple-600 selection:text-white overflow-hidden">
@@ -434,7 +482,11 @@ export default function RealEstateServicePage() {
       </section>
 
       {/* ================= OUR WORK SECTION ================= */}
-      <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
+      <section 
+        id="our-work" 
+        ref={ourWorkSectionRef}
+        className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40"
+      >
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
             Featured Showreel & Vertical Edits
@@ -450,7 +502,7 @@ export default function RealEstateServicePage() {
           <button
             onClick={() => scrollOurWork(-450)}
             aria-label="Previous Videos"
-            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+            className="absolute left-2 sm:left-6 lg:left-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -459,7 +511,7 @@ export default function RealEstateServicePage() {
           <button
             onClick={() => scrollOurWork(450)}
             aria-label="Next Videos"
-            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+            className="absolute right-2 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
           >
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -472,11 +524,18 @@ export default function RealEstateServicePage() {
             <div
               ref={ourWorkScrollRef}
               {...ourWorkEvents}
-              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className={`flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-12 sm:px-20 md:px-24 2xl:px-28 pb-6 items-center ${
+                ourWorkList.length <= 4 ? "justify-center" : "justify-start"
+              } scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
             >
               {ourWorkList.map((item) => (
                 <div key={item.id} className="shrink-0">
-                  <InteractiveVideoCard item={item} isDragging={isOurWorkDragging} />
+                  <InteractiveVideoCard
+                    item={item}
+                    isPlaying={playingVideoId === item.id}
+                    onTogglePlay={() => handleTogglePlay(item.id)}
+                    isDragging={isOurWorkDragging}
+                  />
                 </div>
               ))}
             </div>
@@ -485,7 +544,11 @@ export default function RealEstateServicePage() {
       </section>
 
       {/* ================= BEFORE / AFTER SECTION ================= */}
-      <section className="relative z-10 w-full py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 bg-[#06030a] select-none">
+      <section 
+        id="before-after"
+        ref={beforeAfterSectionRef}
+        className="relative z-10 w-full py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 bg-[#06030a] select-none"
+      >
         <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
           <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
             Transformation Showcase
@@ -501,7 +564,7 @@ export default function RealEstateServicePage() {
           <button
             onClick={() => scrollBeforeAfter(-450)}
             aria-label="Previous Transformations"
-            className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+            className="absolute left-2 sm:left-6 lg:left-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -510,7 +573,7 @@ export default function RealEstateServicePage() {
           <button
             onClick={() => scrollBeforeAfter(450)}
             aria-label="Next Transformations"
-            className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+            className="absolute right-2 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
           >
             <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
@@ -523,11 +586,18 @@ export default function RealEstateServicePage() {
             <div
               ref={beforeAfterScrollRef}
               {...beforeAfterEvents}
-              className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className={`flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-12 sm:px-20 md:px-24 2xl:px-28 pb-6 items-center ${
+                beforeAfterCards.length <= 4 ? "justify-center" : "justify-start"
+              } scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
             >
               {beforeAfterCards.map((item) => (
                 <div key={item.id} className="shrink-0">
-                  <InteractiveVideoCard item={item} isDragging={isBeforeAfterDragging} />
+                  <InteractiveVideoCard
+                    item={item}
+                    isPlaying={playingVideoId === item.id}
+                    onTogglePlay={() => handleTogglePlay(item.id)}
+                    isDragging={isBeforeAfterDragging}
+                  />
                 </div>
               ))}
             </div>

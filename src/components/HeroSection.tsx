@@ -12,8 +12,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import { Cinzel } from "next/font/google";
-import { ArrowRight, ArrowUpRight, Loader2 } from "lucide-react";
-import { CloudinaryResource } from "@/lib/cloudinary"; // Path Adjust karlaleyn
+import { ArrowRight, ArrowUpRight, Loader2, Play, Pause } from "lucide-react";
+import { CloudinaryResource } from "@/lib/cloudinary"; // Path Adjust karlein
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -73,7 +73,9 @@ export default function HeroSection() {
 
   const [heroCards, setHeroCards] = useState<HeroCardItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
+  // Track which card is playing by its unique ID
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   // Fetch Testimonial Videos from Cloudinary API
   useEffect(() => {
@@ -83,11 +85,11 @@ export default function HeroSection() {
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          // Top 5 videos map kar rahe hain
+          // Hero section ke liye shuru ki 5 videos
           const formattedCards: HeroCardItem[] = data.slice(0, 5).map((item) => ({
             id: item.public_id,
             video: item.secure_url,
-            poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"), // Auto-generated thumbnail
+            poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
           }));
           setHeroCards(formattedCards);
         }
@@ -101,6 +103,7 @@ export default function HeroSection() {
     fetchTestimonialVideos();
   }, []);
 
+  // Middle card fixed index (index 2 for 5 items)
   const centerIndex = useMemo(() => Math.floor(heroCards.length / 2), [heroCards.length]);
 
   const scrollToCenterCard = () => {
@@ -131,6 +134,26 @@ export default function HeroSection() {
       window.removeEventListener("resize", handleResize);
     };
   }, [heroCards]);
+
+  // Viewport Scroll Observer: Screen se bahar scroll hone par video automatically pause ho jayegi
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setPlayingVideoId(null);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    if (mainRef.current) {
+      observer.observe(mainRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   useGSAP(
     () => {
@@ -191,6 +214,10 @@ export default function HeroSection() {
     },
     { scope: mainRef, dependencies: [loading, heroCards] }
   );
+
+  const handleTogglePlay = (id: string) => {
+    setPlayingVideoId((prevId) => (prevId === id ? null : id));
+  };
 
   const cards = useMemo(
     () =>
@@ -294,9 +321,9 @@ export default function HeroSection() {
                   item={item}
                   index={index}
                   offset={offset}
-                  isPlaying={hoveredIndex === index}
                   isCenter={offset === 0}
-                  onHover={setHoveredIndex}
+                  isPlaying={playingVideoId === item.id}
+                  onTogglePlay={() => handleTogglePlay(item.id)}
                   isMobile={false}
                 />
               ))}
@@ -317,9 +344,9 @@ export default function HeroSection() {
                     item={item}
                     index={index}
                     offset={offset}
-                    isPlaying={hoveredIndex === index}
                     isCenter={offset === 0}
-                    onHover={setHoveredIndex}
+                    isPlaying={playingVideoId === item.id}
+                    onTogglePlay={() => handleTogglePlay(item.id)}
                     isMobile={true}
                   />
                 </div>
@@ -338,20 +365,19 @@ type HeroCardProps = {
   item: HeroCardItem;
   index: number;
   offset: number;
-  isPlaying: boolean;
   isCenter: boolean;
+  isPlaying: boolean;
   isMobile: boolean;
-  onHover: (index: number | null) => void;
+  onTogglePlay: () => void;
 };
 
 const HeroCard = memo(function HeroCard({
   item,
-  index,
   offset,
-  isPlaying,
   isCenter,
+  isPlaying,
   isMobile,
-  onHover,
+  onTogglePlay,
 }: HeroCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isVisible = Math.abs(offset) <= VISIBLE_SIDES;
@@ -366,7 +392,7 @@ const HeroCard = memo(function HeroCard({
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           video.muted = true;
-          video.play().catch(() => { });
+          video.play().catch(() => {});
         });
       }
     } else {
@@ -382,25 +408,25 @@ const HeroCard = memo(function HeroCard({
   }, [offset, isMobile]);
 
   return (
-    <button
-      type="button"
-      onMouseEnter={() => onHover(index)}
-      onMouseLeave={() => onHover(null)}
+    <div
+      onClick={onTogglePlay}
       aria-current={isCenter}
       tabIndex={isMobile || isVisible ? 0 : -1}
-      className={`${isMobile
-        ? "relative aspect-[9/14] w-[210px] sm:w-[280px] md:w-[330px]"
-        : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
-        } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none`}
+      className={`${
+        isMobile
+          ? "relative aspect-[9/14] w-[210px] sm:w-[280px] md:w-[330px]"
+          : "absolute aspect-[9/14] w-[240px] xl:w-[300px] 2xl:w-[360px]"
+      } transform-gpu cursor-pointer transition-all duration-500 ease-out focus:outline-none select-none group`}
       style={style}
     >
       <div
-        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${isCenter
-          ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_30px_rgba(168,85,247,0.5)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)] scale-100"
-          : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px] opacity-80"
-          }`}
+        className={`absolute inset-0 rounded-[24px] sm:rounded-[32px] 2xl:rounded-[40px] transition-all duration-500 ${
+          isCenter
+            ? "bg-gradient-to-b from-purple-400 via-fuchsia-500 to-purple-700 p-[1.5px] 2xl:p-[2px] shadow-[0_0_30px_rgba(168,85,247,0.5)] 2xl:shadow-[0_0_55px_rgba(168,85,247,0.55)] scale-100"
+            : "bg-gradient-to-b from-white/20 via-purple-500/10 to-transparent p-[1px] opacity-85 hover:opacity-100 hover:border-purple-400/40"
+        }`}
       >
-        <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px]">
+        <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px] bg-[#0c0617]">
           <video
             ref={videoRef}
             src={item.video}
@@ -409,12 +435,33 @@ const HeroCard = memo(function HeroCard({
             playsInline
             disablePictureInPicture
             preload="metadata"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover pointer-events-none"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none" />
+
+          {/* Dimmer Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/15 pointer-events-none" />
+
+          {/* Play/Pause Overlay: Desktop par sirf hover per show hoga, Mobile par play status ke mutabiq */}
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none ${
+              isMobile
+                ? isPlaying
+                  ? "opacity-0 bg-transparent"
+                  : "opacity-100 bg-black/30"
+                : "opacity-0 group-hover:opacity-100 bg-black/35 backdrop-blur-[2px]"
+            }`}
+          >
+            <div className="p-3.5 sm:p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110 active:scale-95">
+              {isPlaying ? (
+                <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+              ) : (
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 });
 

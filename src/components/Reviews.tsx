@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from "react";
-import { Play, Pause, Loader2 } from "lucide-react";
+import { Play, Pause, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
-import { CloudinaryResource } from "@/lib/cloudinary"; // Path Check karlaleyn
+import { CloudinaryResource } from "@/lib/cloudinary"; // Path Check karleyn
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -105,7 +105,7 @@ function VideoCard({
             isPlaying ? "opacity-0 group-hover:opacity-100 bg-black/20" : "opacity-100 bg-black/40"
           }`}
         >
-          <div className="p-3.5 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+          <div className="p-3.5 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110">
             {isPlaying ? (
               <Pause className="w-6 h-6 fill-current" />
             ) : (
@@ -137,7 +137,6 @@ export default function VideoTestimonials() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Fetch All Testimonials Videos from Cloudinary
   useEffect(() => {
     async function fetchAllTestimonials() {
       try {
@@ -145,7 +144,8 @@ export default function VideoTestimonials() {
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          const fetchedTestimonials: Testimonial[] = data.map((item) => ({
+          // Shuru ki 5 videos skip karke baqi testimonials load karein
+          const fetchedTestimonials: Testimonial[] = data.slice(5).map((item) => ({
             id: item.public_id,
             videoSrc: item.secure_url,
             poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
@@ -252,7 +252,7 @@ export default function VideoTestimonials() {
     return () => clearInterval(interval);
   }, [isHovered, isDragging, testimonials]);
 
-  // Stop videos on section leave
+  // Viewport Scroll Observer: Jaise hi section screen se bahar ho, video stop aur reset ho jaye
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -261,12 +261,13 @@ export default function VideoTestimonials() {
             const videos = sectionRef.current?.querySelectorAll("video");
             videos?.forEach((vid) => {
               vid.pause();
+              vid.currentTime = 0;
               vid.muted = true;
             });
           }
         });
       },
-      { threshold: 0.2 }
+      { threshold: 0.15 }
     );
 
     if (sectionRef.current) {
@@ -275,6 +276,19 @@ export default function VideoTestimonials() {
 
     return () => observer.disconnect();
   }, []);
+
+  // Left & Right Navigation Handlers
+  const handlePrev = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (testimonials.length === 0) return;
+    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
+  const handleNext = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (testimonials.length === 0) return;
+    setActiveIndex((prev) => (prev + 1) % testimonials.length);
+  };
 
   // Drag & Swipe Handlers
   const handleDragStart = (clientX: number) => {
@@ -290,9 +304,9 @@ export default function VideoTestimonials() {
 
     if (Math.abs(diff) > 25) {
       if (diff > 0) {
-        setActiveIndex((prev) => (prev + 1) % testimonials.length);
+        handleNext();
       } else {
-        setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+        handlePrev();
       }
     }
   };
@@ -304,9 +318,9 @@ export default function VideoTestimonials() {
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 15) {
       if (!wheelTimeout.current) {
         if (e.deltaX > 0) {
-          setActiveIndex((prev) => (prev + 1) % testimonials.length);
+          handleNext();
         } else {
-          setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+          handlePrev();
         }
 
         wheelTimeout.current = setTimeout(() => {
@@ -343,10 +357,10 @@ export default function VideoTestimonials() {
         </h2>
       </div>
 
-      {/* Interactive Drag & Swipe Track */}
+      {/* Interactive Drag & Swipe Track with Navigation Buttons */}
       <div
         ref={carouselRef}
-        className="relative w-full max-w-6xl 2xl:max-w-[1500px] mx-auto px-2 sm:px-4 flex flex-col items-center justify-center min-h-[280px] sm:min-h-[360px] 2xl:min-h-[440px] cursor-grab active:cursor-grabbing touch-none"
+        className="relative w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-8 flex flex-col items-center justify-center min-h-[280px] sm:min-h-[360px] 2xl:min-h-[440px] cursor-grab active:cursor-grabbing touch-none"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false);
@@ -364,92 +378,114 @@ export default function VideoTestimonials() {
             <span className="text-xs uppercase tracking-widest text-slate-400 font-mono">Loading Testimonials...</span>
           </div>
         ) : (
-          /* Curved Fan Rotator Ring */
-          <div className="relative w-full flex items-center justify-center h-[280px] sm:h-[360px] 2xl:h-[440px] [perspective:1200px]">
-            {testimonials.map((item, index) => {
-              const total = testimonials.length;
-              const offset = (index - activeIndex + total) % total;
+          <>
+            {/* LEFT NAVIGATION BUTTON */}
+            <button
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous Review"
+              className="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-40 p-2.5 sm:p-3.5 rounded-full bg-[#120824]/80 hover:bg-purple-600/90 text-white/80 hover:text-white border border-purple-400/30 hover:border-purple-300 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.25)] transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
 
-              let xPos = 0;
-              let yPos = 0;
-              let rotateZ = 0;
-              let rotateY = 0;
-              let scale = 0.8;
-              let opacity = 0;
-              let zIndex = 10;
+            {/* RIGHT NAVIGATION BUTTON */}
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label="Next Review"
+              className="absolute right-2 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-40 p-2.5 sm:p-3.5 rounded-full bg-[#120824]/80 hover:bg-purple-600/90 text-white/80 hover:text-white border border-purple-400/30 hover:border-purple-300 backdrop-blur-md shadow-[0_0_20px_rgba(168,85,247,0.25)] transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer focus:outline-none"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
 
-              if (offset === 0) {
-                // CENTER ACTIVE VIDEO
-                xPos = 0;
-                yPos = screenType === "mobile" ? -5 : -12;
-                scale = screenType === "mobile" ? 1.05 : screenType === "large" ? 1.15 : 1.1;
-                opacity = 1;
-                zIndex = 30;
-                rotateZ = 0;
-                rotateY = 0;
-              } else if (offset === 1) {
-                // RIGHT 1
-                xPos = screenType === "mobile" ? 100 : screenType === "large" ? 240 : 180;
-                yPos = screenType === "mobile" ? 15 : 25;
-                scale = screenType === "mobile" ? 0.84 : 0.92;
-                opacity = screenType === "mobile" ? 0.65 : 0.9;
-                rotateZ = 6;
-                rotateY = -12;
-                zIndex = 20;
-              } else if (offset === 2) {
-                // RIGHT 2
-                xPos = screenType === "mobile" ? 165 : screenType === "large" ? 430 : 330;
-                yPos = screenType === "mobile" ? 35 : 55;
-                scale = screenType === "mobile" ? 0.68 : 0.76;
-                opacity = screenType === "mobile" ? 0.25 : 0.55;
-                rotateZ = 12;
-                rotateY = -24;
-                zIndex = 10;
-              } else if (offset === total - 1) {
-                // LEFT 1
-                xPos = screenType === "mobile" ? -100 : screenType === "large" ? -240 : -180;
-                yPos = screenType === "mobile" ? 15 : 25;
-                scale = screenType === "mobile" ? 0.84 : 0.92;
-                opacity = screenType === "mobile" ? 0.65 : 0.9;
-                rotateZ = -6;
-                rotateY = 12;
-                zIndex = 20;
-              } else if (offset === total - 2) {
-                // LEFT 2
-                xPos = screenType === "mobile" ? -165 : screenType === "large" ? -430 : -330;
-                yPos = screenType === "mobile" ? 35 : 55;
-                scale = screenType === "mobile" ? 0.68 : 0.76;
-                opacity = screenType === "mobile" ? 0.25 : 0.55;
-                rotateZ = -12;
-                rotateY = 24;
-                zIndex = 10;
-              } else {
-                xPos = 0;
-                yPos = 80;
-                scale = 0.5;
-                opacity = 0;
-                zIndex = 0;
-              }
+            {/* Curved Fan Rotator Ring */}
+            <div className="relative w-full flex items-center justify-center h-[280px] sm:h-[360px] 2xl:h-[440px] [perspective:1200px]">
+              {testimonials.map((item, index) => {
+                const total = testimonials.length;
+                const offset = (index - activeIndex + total) % total;
 
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    transform: `translate3d(${xPos}px, ${yPos}px, 0px) scale(${scale}) rotateZ(${rotateZ}deg) rotateY(${rotateY}deg)`,
-                    opacity: opacity,
-                    zIndex: zIndex,
-                  }}
-                  className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] origin-bottom transform-gpu"
-                >
-                  <VideoCard
-                    item={item}
-                    isActive={offset === 0}
-                    onMakeActive={() => setActiveIndex(index)}
-                  />
-                </div>
-              );
-            })}
-          </div>
+                let xPos = 0;
+                let yPos = 0;
+                let rotateZ = 0;
+                let rotateY = 0;
+                let scale = 0.8;
+                let opacity = 0;
+                let zIndex = 10;
+
+                if (offset === 0) {
+                  // CENTER ACTIVE VIDEO
+                  xPos = 0;
+                  yPos = screenType === "mobile" ? -5 : -12;
+                  scale = screenType === "mobile" ? 1.05 : screenType === "large" ? 1.15 : 1.1;
+                  opacity = 1;
+                  zIndex = 30;
+                  rotateZ = 0;
+                  rotateY = 0;
+                } else if (offset === 1) {
+                  // RIGHT 1
+                  xPos = screenType === "mobile" ? 100 : screenType === "large" ? 240 : 180;
+                  yPos = screenType === "mobile" ? 15 : 25;
+                  scale = screenType === "mobile" ? 0.84 : 0.92;
+                  opacity = screenType === "mobile" ? 0.65 : 0.9;
+                  rotateZ = 6;
+                  rotateY = -12;
+                  zIndex = 20;
+                } else if (offset === 2) {
+                  // RIGHT 2
+                  xPos = screenType === "mobile" ? 165 : screenType === "large" ? 430 : 330;
+                  yPos = screenType === "mobile" ? 35 : 55;
+                  scale = screenType === "mobile" ? 0.68 : 0.76;
+                  opacity = screenType === "mobile" ? 0.25 : 0.55;
+                  rotateZ = 12;
+                  rotateY = -24;
+                  zIndex = 10;
+                } else if (offset === total - 1) {
+                  // LEFT 1
+                  xPos = screenType === "mobile" ? -100 : screenType === "large" ? -240 : -180;
+                  yPos = screenType === "mobile" ? 15 : 25;
+                  scale = screenType === "mobile" ? 0.84 : 0.92;
+                  opacity = screenType === "mobile" ? 0.65 : 0.9;
+                  rotateZ = -6;
+                  rotateY = 12;
+                  zIndex = 20;
+                } else if (offset === total - 2) {
+                  // LEFT 2
+                  xPos = screenType === "mobile" ? -165 : screenType === "large" ? -430 : -330;
+                  yPos = screenType === "mobile" ? 35 : 55;
+                  scale = screenType === "mobile" ? 0.68 : 0.76;
+                  opacity = screenType === "mobile" ? 0.25 : 0.55;
+                  rotateZ = -12;
+                  rotateY = 24;
+                  zIndex = 10;
+                } else {
+                  xPos = 0;
+                  yPos = 80;
+                  scale = 0.5;
+                  opacity = 0;
+                  zIndex = 0;
+                }
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      transform: `translate3d(${xPos}px, ${yPos}px, 0px) scale(${scale}) rotateZ(${rotateZ}deg) rotateY(${rotateY}deg)`,
+                      opacity: opacity,
+                      zIndex: zIndex,
+                    }}
+                    className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] origin-bottom transform-gpu"
+                  >
+                    <VideoCard
+                      item={item}
+                      isActive={offset === 0}
+                      onMakeActive={() => setActiveIndex(index)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Play, Pause } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -30,6 +30,7 @@ export default function OurWorkSection() {
   const buttonRef = useRef<HTMLDivElement>(null);
 
   const [activeIndex, setActiveIndex] = useState(1);
+  const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -74,6 +75,26 @@ export default function OurWorkSection() {
     };
   }, []);
 
+  // Viewport Scroll Observer: Jaise hi section render se bahar hoga, video pause ho jayegi
+  useEffect(() => {
+    const sectionEl = sectionRef.current;
+    if (!sectionEl) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setPlayingVideoId(null);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(sectionEl);
+    return () => observer.disconnect();
+  }, []);
+
   const nextVideo = () => {
     setActiveIndex((prev) => (prev + 1) % worksList.length);
   };
@@ -92,6 +113,10 @@ export default function OurWorkSection() {
     } else if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
       prevVideo();
     }
+  };
+
+  const handleTogglePlay = (id: number) => {
+    setPlayingVideoId((prevId) => (prevId === id ? null : id));
   };
 
   return (
@@ -145,6 +170,8 @@ export default function OurWorkSection() {
                 key={`${item.id}-${index}`}
                 item={item}
                 offset={offset}
+                isPlaying={playingVideoId === item.id}
+                onTogglePlay={() => handleTogglePlay(item.id)}
                 onClick={() => setActiveIndex(index)}
               />
             );
@@ -168,37 +195,49 @@ export default function OurWorkSection() {
   );
 }
 
-{/* Individual Video Card Component */ }
+/* Individual Video Card Component */
 function WorkCard({
   item,
   offset,
+  isPlaying,
+  onTogglePlay,
   onClick,
 }: {
   item: { id: number; video: string };
   offset: number;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
   onClick: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isCenter = offset === 0;
 
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      videoRef.current.play().catch(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = true;
-          videoRef.current.play().catch(() => { });
-        }
-      });
-    }
-  };
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = true;
+    if (isPlaying) {
+      video.muted = false;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+        });
+      }
+    } else {
+      video.pause();
+      video.currentTime = 0;
+      video.muted = true;
     }
+  }, [isPlaying]);
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isCenter) {
+      onClick();
+    }
+    onTogglePlay();
   };
 
   const getCardStyle = (): React.CSSProperties => {
@@ -252,10 +291,8 @@ function WorkCard({
 
   return (
     <div
-      onClick={onClick}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform"
+      onClick={handleCardClick}
+      className="group absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform select-none"
       style={{
         ...getCardStyle(),
         WebkitBoxReflect:
@@ -263,10 +300,11 @@ function WorkCard({
       }}
     >
       <div
-        className={`relative w-full h-full transition-all duration-500 ${isCenter
+        className={`relative w-full h-full transition-all duration-500 ${
+          isCenter
             ? "drop-shadow-[0_15px_30px_rgba(168,85,247,0.45)]"
             : "hover:opacity-100"
-          }`}
+        }`}
       >
         <div className="relative w-full h-full">
           <div
@@ -282,7 +320,26 @@ function WorkCard({
               preload="metadata"
               className="w-full h-full object-cover scale-105 pointer-events-none"
             />
+            
+            {/* Dimmer Overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/60 pointer-events-none" />
+
+            {/* Play/Pause Button Overlay: Hover par show hoga */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none ${
+                isPlaying
+                  ? "opacity-0 group-hover:opacity-100 bg-black/25"
+                  : "opacity-0 group-hover:opacity-100 bg-black/35 backdrop-blur-[2px]"
+              }`}
+            >
+              <div className="p-3.5 sm:p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110 active:scale-95">
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
+                )}
+              </div>
+            </div>
           </div>
 
           <svg

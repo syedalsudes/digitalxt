@@ -237,8 +237,12 @@ export default function SaasLaunchVideoPage() {
 /* ================= OUR WORK GRID SECTION ================= */
 
 function WorkGridSection() {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const [worksList, setWorksList] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Single active video tracker across the entire grid
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSaaSVideos() {
@@ -247,7 +251,6 @@ function WorkGridSection() {
         const data: CloudinaryResource[] = await res.json();
 
         if (Array.isArray(data)) {
-          // homesaas filter kar rahe hain kyunki wo services card par already use ho rahi hai
           const filtered = data
             .filter((item) => !item.public_id.toLowerCase().includes("homesaas"))
             .map((item) => ({
@@ -268,9 +271,35 @@ function WorkGridSection() {
     fetchSaaSVideos();
   }, []);
 
+  // Viewport Observer: Screen se bahar hote hi jo video chal rahi ho band ho jaye
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setPlayingVideoId(null);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleTogglePlay = (id: string) => {
+    setPlayingVideoId((prevId) => (prevId === id ? null : id));
+  };
+
   return (
-    <section className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden">
-      
+    <section 
+      ref={sectionRef}
+      className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 border-t border-purple-950/40 overflow-hidden"
+    >
       <Image
         src="/servicesvid.png"
         alt="Our Work Background"
@@ -296,7 +325,12 @@ function WorkGridSection() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 2xl:gap-12">
             {worksList.map((item) => (
-              <WorkGridCard key={item.id} item={item} />
+              <WorkGridCard
+                key={item.id}
+                item={item}
+                isPlaying={playingVideoId === item.id}
+                onTogglePlay={() => handleTogglePlay(item.id)}
+              />
             ))}
           </div>
         )}
@@ -305,34 +339,40 @@ function WorkGridSection() {
   );
 }
 
-function WorkGridCard({ item }: { item: WorkItem }) {
+function WorkGridCard({
+  item,
+  isPlaying,
+  onTogglePlay,
+}: {
+  item: WorkItem;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  const togglePlay = () => {
-    if (!videoRef.current) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-    if (videoRef.current.paused) {
-      videoRef.current.muted = false; // Enable audio with sound
-      videoRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play();
-            setIsPlaying(true);
-          }
+    if (isPlaying) {
+      video.muted = false;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
         });
+      }
     } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
+      video.pause();
+      video.currentTime = 0;
+      video.muted = true;
     }
-  };
+  }, [isPlaying]);
 
   return (
     <div
-      onClick={togglePlay}
+      onClick={onTogglePlay}
       className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl 2xl:rounded-3xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
     >
       <video
@@ -349,7 +389,7 @@ function WorkGridCard({ item }: { item: WorkItem }) {
 
       {/* Play/Pause Button Overlay strictly VISIBLE ONLY ON HOVER */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
-        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110">
           {isPlaying ? (
             <Pause className="w-6 h-6 fill-current" />
           ) : (

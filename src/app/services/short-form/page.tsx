@@ -173,35 +173,48 @@ const longFormPlans: PricingPlan[] = [
   },
 ];
 
-// Interactive Clickable Video Card Component
-function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDragging: boolean }) {
+// Interactive Clickable Video Card Component with Controlled Single-Playback State
+function InteractiveVideoCard({
+  item,
+  isPlaying,
+  onTogglePlay,
+  isDragging,
+}: {
+  item: VideoItem;
+  isPlaying: boolean;
+  onTogglePlay: () => void;
+  isDragging: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  const togglePlay = () => {
-    if (isDragging || !videoRef.current) return;
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-    if (videoRef.current.paused) {
-      videoRef.current.muted = false;
-      videoRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = true;
-            videoRef.current.play();
-            setIsPlaying(true);
-          }
+    if (isPlaying) {
+      video.muted = false;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
         });
+      }
     } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
+      video.pause();
+      video.currentTime = 0;
+      video.muted = true;
     }
+  }, [isPlaying]);
+
+  const handleClick = () => {
+    if (isDragging) return;
+    onTogglePlay();
   };
 
   return (
     <div
-      onClick={togglePlay}
+      onClick={handleClick}
       className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer shrink-0 select-none"
     >
       <video
@@ -217,7 +230,7 @@ function InteractiveVideoCard({ item, isDragging }: { item: VideoItem; isDraggin
 
       {/* Play/Pause Button Overlay strictly on Hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/30 transition-opacity duration-300 pointer-events-none">
-        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40">
+        <div className="p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110">
           {isPlaying ? (
             <Pause className="w-6 h-6 fill-current" />
           ) : (
@@ -429,9 +442,10 @@ export default function CustomVideoEditingPage() {
   );
 }
 
-/* ================= OUR WORK SECTION (DRAGGABLE + FLOATING CORNER BUTTONS) ================= */
+/* ================= OUR WORK SECTION ================= */
 
 function WorkGridSection() {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const {
     ref: ourWorkScrollRef,
     isDragging,
@@ -441,6 +455,9 @@ function WorkGridSection() {
 
   const [customWorksList, setCustomWorksList] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Single Playing Video Tracker
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCustomVideos() {
@@ -469,6 +486,26 @@ function WorkGridSection() {
     fetchCustomVideos();
   }, []);
 
+  // Viewport Observer: Screen se bahar hote hi jo bhi video chal rahi ho band ho jaye
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            setPlayingVideoId(null);
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (ourWorkScrollRef.current && ourWorkScrollRef.current.scrollWidth > ourWorkScrollRef.current.clientWidth) {
       ourWorkScrollRef.current.scrollLeft =
@@ -476,8 +513,16 @@ function WorkGridSection() {
     }
   }, [ourWorkScrollRef, customWorksList]);
 
+  const handleTogglePlay = (id: string) => {
+    setPlayingVideoId((prevId) => (prevId === id ? null : id));
+  };
+
   return (
-    <section id="our-work" className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40">
+    <section 
+      id="our-work" 
+      ref={sectionRef}
+      className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-16 sm:py-20 md:py-28 2xl:py-36 overflow-hidden select-none border-t border-purple-950/40"
+    >
       <div className={`z-10 text-center max-w-4xl 2xl:max-w-6xl mx-auto mb-12 sm:mb-16 2xl:mb-20 px-4 ${cinzel.className}`}>
         <p className="text-[10px] sm:text-xs md:text-sm 2xl:text-lg uppercase tracking-[0.3em] sm:tracking-[0.4em] text-purple-300/70 mb-2">
           Featured Showreel & Vertical Edits
@@ -493,7 +538,7 @@ function WorkGridSection() {
         <button
           onClick={() => scrollByAmount(-450)}
           aria-label="Previous Videos"
-          className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          className="absolute left-2 sm:left-6 lg:left-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
@@ -502,7 +547,7 @@ function WorkGridSection() {
         <button
           onClick={() => scrollByAmount(450)}
           aria-label="Next Videos"
-          className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/80 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90"
+          className="absolute right-2 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 lg:p-4 rounded-full border border-purple-400/40 bg-[#0d071a]/90 text-purple-200 hover:bg-purple-600 hover:text-white backdrop-blur-md transition-all duration-300 shadow-[0_0_25px_rgba(168,85,247,0.4)] active:scale-90 cursor-pointer"
         >
           <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
@@ -515,10 +560,18 @@ function WorkGridSection() {
           <div
             ref={ourWorkScrollRef}
             {...events}
-            className="flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-8 sm:px-16 md:px-20 lg:px-24 2xl:px-28 pb-6 items-center justify-start scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className={`flex overflow-x-auto gap-4 sm:gap-6 md:gap-8 lg:gap-10 2xl:gap-12 px-12 sm:px-20 md:px-24 2xl:px-28 pb-6 items-center ${
+              customWorksList.length <= 4 ? "justify-center" : "justify-start"
+            } scrollbar-none cursor-grab active:cursor-grabbing select-none touch-pan-x [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
           >
             {customWorksList.map((item) => (
-              <InteractiveVideoCard key={item.id} item={item} isDragging={isDragging} />
+              <InteractiveVideoCard
+                key={item.id}
+                item={item}
+                isPlaying={playingVideoId === item.id}
+                onTogglePlay={() => handleTogglePlay(item.id)}
+                isDragging={isDragging}
+              />
             ))}
           </div>
         )}
