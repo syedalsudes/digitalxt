@@ -24,6 +24,7 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { CloudinaryResource } from "@/lib/cloudinary";
+import LazyVideo from "@/components/LazyVideo";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -375,13 +376,10 @@ function WorkGridCard({
       onClick={onTogglePlay}
       className="group relative w-full aspect-[16/9] sm:aspect-[16/8.5] rounded-2xl 2xl:rounded-3xl bg-[#0a0514] border border-purple-500/20 hover:border-purple-400 transition-all duration-500 overflow-hidden cursor-pointer shadow-xl hover:shadow-[0_15px_35px_rgba(168,85,247,0.3)] hover:-translate-y-1.5"
     >
-      <video
+      <LazyVideo
         ref={videoRef}
         src={item.video}
         poster={item.poster}
-        loop
-        playsInline
-        preload="metadata"
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 pointer-events-none"
       />
 

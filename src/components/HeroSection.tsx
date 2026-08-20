@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Cinzel } from "next/font/google";
 import { ArrowRight, ArrowUpRight, Loader2, Play, Pause } from "lucide-react";
 import { CloudinaryResource } from "@/lib/cloudinary"; // Path Adjust karlein
+import LazyVideo from "@/components/LazyVideo";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -428,14 +429,11 @@ const HeroCard = memo(function HeroCard({
         }`}
       >
         <div className="relative h-full w-full overflow-hidden rounded-[23px] sm:rounded-[31px] 2xl:rounded-[39px] bg-[#0c0617]">
-          <video
+          <LazyVideo
             ref={videoRef}
             src={item.video}
             poster={item.poster}
-            loop
-            playsInline
             disablePictureInPicture
-            preload="metadata"
             className="h-full w-full object-cover pointer-events-none"
           />
 

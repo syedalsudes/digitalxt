@@ -8,6 +8,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { motion, PanInfo } from "framer-motion";
+import LazyVideo from "@/components/LazyVideo";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -311,13 +312,9 @@ function WorkCard({
             className="relative w-full h-full bg-[#0a0514] overflow-hidden"
             style={{ clipPath: "url(#curvedScreenClip)" }}
           >
-            <video
+            <LazyVideo
               ref={videoRef}
               src={item.video}
-              loop
-              muted
-              playsInline
-              preload="metadata"
               className="w-full h-full object-cover scale-105 pointer-events-none"
             />
             

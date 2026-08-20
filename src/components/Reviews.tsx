@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { CloudinaryResource } from "@/lib/cloudinary"; // Path Check karleyn
+import LazyVideo from "@/components/LazyVideo";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -84,14 +85,10 @@ function VideoCard({
           : "border-white/15 hover:border-purple-400/60 z-20"
       }`}
     >
-      <video
+      <LazyVideo
         ref={videoRef}
         src={item.videoSrc}
         poster={item.poster}
-        muted
-        loop
-        playsInline
-        preload="metadata"
         className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105 pointer-events-none"
       />
 
@@ -137,7 +134,31 @@ export default function VideoTestimonials() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
+  // Defer the testimonials fetch (and everything downstream of it) until this
+  // below-the-fold section is about to scroll into view, instead of firing on mount.
+  const [nearViewport, setNearViewport] = useState(false);
+
   useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!nearViewport) return;
+
     async function fetchAllTestimonials() {
       try {
         const res = await fetch("/api/videos?folder=Digitalixstudio/testimonials");
@@ -160,7 +181,7 @@ export default function VideoTestimonials() {
     }
 
     fetchAllTestimonials();
-  }, []);
+  }, [nearViewport]);
 
   // Screen Resize Detector
   useEffect(() => {

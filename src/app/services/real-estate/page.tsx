@@ -27,6 +27,7 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { CloudinaryResource } from "@/lib/cloudinary";
+import LazyVideo from "@/components/LazyVideo";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -165,13 +166,10 @@ function InteractiveVideoCard({
       onClick={handleClick}
       className="relative aspect-[9/16] w-[70vw] xs:w-[210px] sm:w-[240px] md:w-[270px] lg:w-[290px] xl:w-[320px] 2xl:w-[380px] rounded-[24px] xl:rounded-[32px] 2xl:rounded-[40px] overflow-hidden border border-purple-500/40 shadow-[0_10px_35px_rgba(0,0,0,0.8)] group bg-[#0d071a] transition-all duration-300 cursor-pointer select-none"
     >
-      <video
+      <LazyVideo
         ref={videoRef}
         src={item.video}
         poster={item.poster}
-        loop
-        playsInline
-        preload="metadata"
         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 pointer-events-none"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />

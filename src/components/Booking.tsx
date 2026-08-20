@@ -2,6 +2,8 @@
 
 import { InlineWidget } from "react-calendly";
 import { Cinzel } from "next/font/google";
+import { Loader2 } from "lucide-react";
+import LazyMount from "@/components/LazyMount";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -34,7 +36,14 @@ export default function CalendlyBooking() {
         </div>
 
         {/* Deck Frame - Increased Height for Full Box Fit */}
-        <div className="w-full rounded-2xl overflow-hidden border border-purple-500/20 bg-[#08050c] shadow-2xl [filter:invert(0.92)_hue-rotate(180deg)]">
+        <LazyMount
+          className="w-full rounded-2xl overflow-hidden border border-purple-500/20 bg-[#08050c] shadow-2xl [filter:invert(0.92)_hue-rotate(180deg)]"
+          placeholder={
+            <div style={{ height: "780px" }} className="w-full flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          }
+        >
           <InlineWidget
             url={calendlyUrl}
             styles={{
@@ -42,14 +51,14 @@ export default function CalendlyBooking() {
               width: "100%",
             }}
             pageSettings={{
-              backgroundColor: "ffffff", 
+              backgroundColor: "ffffff",
               hideEventTypeDetails: false,
               hideLandingPageDetails: false,
-              primaryColor: "a855f7",    
-              textColor: "000000"        
+              primaryColor: "a855f7",
+              textColor: "000000"
             }}
           />
-        </div>
+        </LazyMount>
       </div>
     </section>
   );

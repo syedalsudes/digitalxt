@@ -15,6 +15,7 @@ import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import LazyVideo from "@/components/LazyVideo";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -295,14 +296,10 @@ function ServiceCard({ service, index }: { service: ServiceData; index: number }
             style={{ clipPath: innerClipPath }}
             onClick={togglePlay}
           >
-            <video
+            <LazyVideo
               ref={videoRef}
               src={service.videoUrl}
               poster={service.videoUrl.includes('cloudinary.com') ? service.videoUrl.replace(/\.[^/.]+$/, ".jpg") : undefined}
-              loop
-              muted
-              playsInline
-              preload="metadata"
               className="w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105"
             />
 
