@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, memo } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Play, Pause } from "lucide-react";
+import { ArrowUpRight, Play, Pause, Loader2 } from "lucide-react";
 import { Cinzel } from "next/font/google";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import { motion, PanInfo } from "framer-motion";
+import { CloudinaryResource } from "@/lib/cloudinary";
 import LazyVideo from "@/components/LazyVideo";
 
 const cinzel = Cinzel({
@@ -15,25 +16,72 @@ const cinzel = Cinzel({
   weight: ["700"],
 });
 
-const worksList = [
-  { id: 1, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 2, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 3, video: "/videos/ourwork/workvid3.mp4" },
-  { id: 4, video: "/videos/ourwork/workvid4.mp4" },
-  { id: 5, video: "/videos/ourwork/workvid1.mp4" },
-  { id: 6, video: "/videos/ourwork/workvid2.mp4" },
-  { id: 7, video: "/videos/ourwork/workvid3.mp4" },
-];
+type WorkCardItem = {
+  id: string;
+  uniqueKey: string;
+  video: string;
+  poster: string;
+};
 
 export default function OurWorkSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  const [activeIndex, setActiveIndex] = useState(1);
-  const [playingVideoId, setPlayingVideoId] = useState<number | null>(null);
+  const [worksList, setWorksList] = useState<WorkCardItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
 
+  // Cloudinary se videos fetch aur dupe logic
   useEffect(() => {
+    let isMounted = true;
+
+    async function fetchWorkVideos() {
+      try {
+        const res = await fetch("/api/videos?folder=Digitalixstudio/ourwork");
+        if (!res.ok) throw new Error("Failed to fetch videos");
+        
+        const data: CloudinaryResource[] = await res.json();
+
+        if (Array.isArray(data) && data.length > 0 && isMounted) {
+          const formatted: WorkCardItem[] = data.map((item) => ({
+            id: item.public_id,
+            uniqueKey: `${item.public_id}-set1`,
+            video: item.secure_url,
+            poster: item.secure_url.replace(/\.[^/.]+$/, ".jpg"),
+          }));
+
+          // 4 videos ko repeat karke 8 items ka smooth loop
+          const duplicated: WorkCardItem[] = [
+            ...formatted,
+            ...formatted.map((item) => ({
+              ...item,
+              uniqueKey: `${item.id}-set2`,
+            })),
+          ];
+
+          setWorksList(duplicated);
+          setActiveIndex(Math.floor(duplicated.length / 2));
+        }
+      } catch (err) {
+        console.error("Failed to load our work videos:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    fetchWorkVideos();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // GSAP & Smooth Scroll Trigger
+  useEffect(() => {
+    if (loading || worksList.length === 0) return;
+
     gsap.registerPlugin(ScrollTrigger);
 
     const lenis = new Lenis({
@@ -43,9 +91,8 @@ export default function OurWorkSection() {
     });
 
     lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
+    const updateTicker = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(updateTicker);
     gsap.ticker.lagSmoothing(0);
 
     const ctx = gsap.context(() => {
@@ -54,29 +101,36 @@ export default function OurWorkSection() {
           trigger: sectionRef.current,
           start: "top 80%",
           end: "bottom 20%",
-          toggleActions: "restart reverse restart reverse",
+          toggleActions: "play reverse play reverse",
         },
       });
 
-      tl.fromTo(
-        headerRef.current,
-        { opacity: 0, y: -30 },
-        { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }
-      ).fromTo(
-        buttonRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
-        "-=0.3"
-      );
+      if (headerRef.current) {
+        tl.fromTo(
+          headerRef.current,
+          { opacity: 0, y: -25 },
+          { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }
+        );
+      }
+
+      if (buttonRef.current) {
+        tl.fromTo(
+          buttonRef.current,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+          "-=0.3"
+        );
+      }
     }, sectionRef);
 
     return () => {
       ctx.revert();
+      gsap.ticker.remove(updateTicker);
       lenis.destroy();
     };
-  }, []);
+  }, [loading, worksList.length]);
 
-  // Viewport Scroll Observer: Jaise hi section render se bahar hoga, video pause ho jayegi
+  // Section se bahar scroll hone par audio/video band karna
   useEffect(() => {
     const sectionEl = sectionRef.current;
     if (!sectionEl) return;
@@ -89,25 +143,30 @@ export default function OurWorkSection() {
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.2 }
     );
 
     observer.observe(sectionEl);
     return () => observer.disconnect();
   }, []);
 
+  const totalCards = worksList.length;
+
   const nextVideo = () => {
-    setActiveIndex((prev) => (prev + 1) % worksList.length);
+    if (totalCards === 0) return;
+    setPlayingVideoId(null);
+    setActiveIndex((prev) => (prev + 1) % totalCards);
   };
 
   const prevVideo = () => {
-    setActiveIndex((prev) => (prev - 1 + worksList.length) % worksList.length);
+    if (totalCards === 0) return;
+    setPlayingVideoId(null);
+    setActiveIndex((prev) => (prev - 1 + totalCards) % totalCards);
   };
 
-  // Ultra-Smooth Drag End Handler
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    const swipeThreshold = 50;
-    const velocityThreshold = 300;
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const swipeThreshold = 40;
+    const velocityThreshold = 250;
 
     if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
       nextVideo();
@@ -116,8 +175,15 @@ export default function OurWorkSection() {
     }
   };
 
-  const handleTogglePlay = (id: number) => {
-    setPlayingVideoId((prevId) => (prevId === id ? null : id));
+  const handleCardInteraction = (index: number, uniqueKey: string) => {
+    if (index !== activeIndex) {
+      // Agar side card click kiya gaya hai toh pehle usse center banao aur play karo
+      setActiveIndex(index);
+      setPlayingVideoId(uniqueKey);
+    } else {
+      // Agar already center card hai toh play/pause toggle karo
+      setPlayingVideoId((prev) => (prev === uniqueKey ? null : uniqueKey));
+    }
   };
 
   return (
@@ -126,7 +192,7 @@ export default function OurWorkSection() {
       ref={sectionRef}
       className="relative w-full bg-[#06030a] text-white flex flex-col items-center justify-center py-12 sm:py-16 md:py-24 overflow-hidden selection:bg-purple-500/30"
     >
-      {/* Curved Screen ClipPath Definition */}
+      {/* Curved Screen ClipPath */}
       <svg className="absolute w-0 h-0 overflow-hidden" aria-hidden="true">
         <defs>
           <clipPath id="curvedScreenClip" clipPathUnits="objectBoundingBox">
@@ -135,7 +201,7 @@ export default function OurWorkSection() {
         </defs>
       </svg>
 
-      {/* Background Ambient Glow */}
+      {/* Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[700px] md:w-[1100px] h-[220px] sm:h-[400px] md:h-[600px] bg-purple-600/15 blur-[120px] sm:blur-[170px] rounded-full pointer-events-none" />
 
       {/* Header */}
@@ -151,36 +217,44 @@ export default function OurWorkSection() {
         </h2>
       </div>
 
-      {/* PANORAMIC CURVED DECK CAROUSEL */}
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={handleDragEnd}
-        className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing px-2 select-none"
-        style={{ perspective: "1000px" }}
-      >
-        <div className="relative w-full max-w-[1280px] h-full flex items-center justify-center">
-          {worksList.map((item, index) => {
-            let offset = index - activeIndex;
-            if (offset > worksList.length / 2) offset -= worksList.length;
-            if (offset < -worksList.length / 2) offset += worksList.length;
-
-            return (
-              <WorkCard
-                key={`${item.id}-${index}`}
-                item={item}
-                offset={offset}
-                isPlaying={playingVideoId === item.id}
-                onTogglePlay={() => handleTogglePlay(item.id)}
-                onClick={() => setActiveIndex(index)}
-              />
-            );
-          })}
+      {/* Carousel */}
+      {loading ? (
+        <div className="flex justify-center items-center h-[220px] sm:h-[340px] md:h-[440px]">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
         </div>
-      </motion.div>
+      ) : (
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.15}
+          onDragEnd={handleDragEnd}
+          className="relative z-10 w-full h-[220px] sm:h-[340px] md:h-[440px] flex items-center justify-center cursor-grab active:cursor-grabbing px-2 select-none"
+          style={{ perspective: "1200px" }}
+        >
+          <div className="relative w-full max-w-[1280px] h-full flex items-center justify-center">
+            {worksList.map((item, index) => {
+              let offset = index - activeIndex;
+              const half = totalCards / 2;
+              
+              if (offset > half) offset -= totalCards;
+              if (offset < -half) offset += totalCards;
 
-      {/* Action Button */}
+              return (
+                <WorkCard
+                  key={item.uniqueKey}
+                  item={item}
+                  offset={offset}
+                  isCenter={offset === 0}
+                  isPlaying={playingVideoId === item.uniqueKey}
+                  onCardClick={() => handleCardInteraction(index, item.uniqueKey)}
+                />
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Button */}
       <div ref={buttonRef} className="z-10 mt-10 sm:mt-14 md:mt-20 shrink-0 relative group/btn px-4">
         <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-purple-600 opacity-40 blur-md group-hover/btn:opacity-80 transition-opacity duration-300" />
         <Link
@@ -196,28 +270,30 @@ export default function OurWorkSection() {
   );
 }
 
-/* Individual Video Card Component */
-function WorkCard({
+/* Individual Work Card */
+type WorkCardProps = {
+  item: WorkCardItem;
+  offset: number;
+  isCenter: boolean;
+  isPlaying: boolean;
+  onCardClick: () => void;
+};
+
+const WorkCard = memo(function WorkCard({
   item,
   offset,
+  isCenter,
   isPlaying,
-  onTogglePlay,
-  onClick,
-}: {
-  item: { id: number; video: string };
-  offset: number;
-  isPlaying: boolean;
-  onTogglePlay: () => void;
-  onClick: () => void;
-}) {
+  onCardClick,
+}: WorkCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isCenter = offset === 0;
 
+  // Playback handling
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying) {
+    if (isPlaying && isCenter) {
       video.muted = false;
       const playPromise = video.play();
       if (playPromise !== undefined) {
@@ -228,83 +304,61 @@ function WorkCard({
       }
     } else {
       video.pause();
-      video.currentTime = 0;
-      video.muted = true;
+      if (!isCenter) video.currentTime = 0;
     }
-  }, [isPlaying]);
+  }, [isPlaying, isCenter]);
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isCenter) {
-      onClick();
-    }
-    onTogglePlay();
-  };
+  // Card Transform Positioning
+  const cardStyle = useMemo((): React.CSSProperties => {
+    const absOffset = Math.abs(offset);
+    const sign = Math.sign(offset);
 
-  const getCardStyle = (): React.CSSProperties => {
-    if (offset === 0) {
+    if (absOffset === 0) {
       return {
         transform: "translateX(0%) scale(1) translateZ(0px) rotateY(0deg)",
-        zIndex: 30,
+        zIndex: 40,
         opacity: 1,
         filter: "brightness(100%)",
+        pointerEvents: "auto",
       };
-    } else if (offset === 1) {
+    } else if (absOffset === 1) {
       return {
-        transform: "translateX(62%) scale(0.82) translateZ(-120px) rotateY(-22deg)",
-        zIndex: 20,
+        transform: `translateX(${sign * 62}%) scale(0.82) translateZ(-100px) rotateY(${sign * -22}deg)`,
+        zIndex: 25,
         opacity: 0.85,
         filter: "brightness(75%)",
+        pointerEvents: "auto",
       };
-    } else if (offset === -1) {
+    } else if (absOffset === 2) {
       return {
-        transform: "translateX(-62%) scale(0.82) translateZ(-120px) rotateY(22deg)",
-        zIndex: 20,
-        opacity: 0.85,
-        filter: "brightness(75%)",
-      };
-    } else if (offset === 2) {
-      return {
-        transform: "translateX(110%) scale(0.68) translateZ(-250px) rotateY(-35deg)",
-        zIndex: 10,
+        transform: `translateX(${sign * 112}%) scale(0.68) translateZ(-220px) rotateY(${sign * -35}deg)`,
+        zIndex: 15,
         opacity: 0.45,
         filter: "brightness(50%)",
-      };
-    } else if (offset === -2) {
-      return {
-        transform: "translateX(-110%) scale(0.68) translateZ(-250px) rotateY(35deg)",
-        zIndex: 10,
-        opacity: 0.45,
-        filter: "brightness(50%)",
-      };
-    } else {
-      return {
-        transform:
-          offset > 0
-            ? "translateX(160%) scale(0.5) rotateY(-45deg)"
-            : "translateX(-160%) scale(0.5) rotateY(45deg)",
-        zIndex: 0,
-        opacity: 0,
-        pointerEvents: "none",
+        pointerEvents: "auto",
       };
     }
-  };
+
+    return {
+      transform: `translateX(${sign * 160}%) scale(0.5) rotateY(${sign * -45}deg)`,
+      zIndex: 0,
+      opacity: 0,
+      pointerEvents: "none",
+    };
+  }, [offset]);
 
   return (
     <div
-      onClick={handleCardClick}
+      onClick={onCardClick}
       className="group absolute w-[72vw] sm:w-[50vw] md:w-[44vw] max-w-[580px] aspect-[16/9] transition-all duration-500 ease-out cursor-pointer transform-gpu will-change-transform select-none"
       style={{
-        ...getCardStyle(),
-        WebkitBoxReflect:
-          "below 8px linear-gradient(transparent 65%, rgba(0, 0, 0, 0.45))",
+        ...cardStyle,
+        WebkitBoxReflect: "below 8px linear-gradient(transparent 65%, rgba(0, 0, 0, 0.45))",
       }}
     >
       <div
         className={`relative w-full h-full transition-all duration-500 ${
-          isCenter
-            ? "drop-shadow-[0_15px_30px_rgba(168,85,247,0.45)]"
-            : "hover:opacity-100"
+          isCenter ? "drop-shadow-[0_15px_30px_rgba(168,85,247,0.45)]" : "hover:opacity-100"
         }`}
       >
         <div className="relative w-full h-full">
@@ -315,22 +369,23 @@ function WorkCard({
             <LazyVideo
               ref={videoRef}
               src={item.video}
+              poster={item.poster}
               className="w-full h-full object-cover scale-105 pointer-events-none"
             />
-            
-            {/* Dimmer Overlay */}
+
+            {/* Gradient Dimmer */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/60 pointer-events-none" />
 
-            {/* Play/Pause Button Overlay: Hover par show hoga */}
+            {/* Play Button Indicator */}
             <div
               className={`absolute inset-0 flex items-center justify-center transition-all duration-300 pointer-events-none ${
-                isPlaying
+                isPlaying && isCenter
                   ? "opacity-0 group-hover:opacity-100 bg-black/25"
                   : "opacity-0 group-hover:opacity-100 bg-black/35 backdrop-blur-[2px]"
               }`}
             >
               <div className="p-3.5 sm:p-4 bg-purple-600/90 hover:bg-purple-500 rounded-full text-white backdrop-blur-md shadow-xl border border-purple-300/40 transform transition-transform duration-300 group-hover:scale-110 active:scale-95">
-                {isPlaying ? (
+                {isPlaying && isCenter ? (
                   <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
                 ) : (
                   <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current ml-0.5" />
@@ -339,6 +394,7 @@ function WorkCard({
             </div>
           </div>
 
+          {/* SVG Border Effect */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none z-20"
             viewBox="0 0 1000 562.5"
@@ -346,7 +402,7 @@ function WorkCard({
           >
             <defs>
               <linearGradient
-                id={`borderGrad-${item.id}`}
+                id={`borderGrad-${item.uniqueKey}`}
                 x1="0%"
                 y1="0%"
                 x2="100%"
@@ -372,7 +428,7 @@ function WorkCard({
             <path
               d="M 20 34 Q 500 78 980 34 C 990 34 1000 45 1000 62 L 1000 500 C 1000 517 990 528 980 528 Q 500 484 20 528 C 10 528 0 517 0 500 L 0 62 C 0 45 10 34 20 34 Z"
               fill="none"
-              stroke={`url(#borderGrad-${item.id})`}
+              stroke={`url(#borderGrad-${item.uniqueKey})`}
               strokeWidth={isCenter ? "4" : "2.5"}
             />
           </svg>
@@ -380,4 +436,6 @@ function WorkCard({
       </div>
     </div>
   );
-}
+});
+
+WorkCard.displayName = "WorkCard";
